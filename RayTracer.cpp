@@ -19,13 +19,13 @@
 using namespace std;
 
 TextureBMP texture;
-const float EDIST = 40.0;
+const float EDIST = 40;  // Reduced eye distance to zoom out
 const int NUMDIV = 500;
 const int MAX_STEPS = 5;
-const float XMIN = -10.0;
-const float XMAX = 10.0;
-const float YMIN = -10.0;
-const float YMAX = 10.0;
+const float XMIN = -20.0;  // Widened viewing window
+const float XMAX = 20.0;   // Widened viewing window
+const float YMIN = -20.0;  // Widened viewing window
+const float YMAX = 20.0;   // Widened viewing window
 
 vector<SceneObject*> sceneObjects;
 
@@ -34,8 +34,8 @@ vector<SceneObject*> sceneObjects;
 //     closest point of intersection with objects in the scene.
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step) {
-	glm::vec3 backgroundCol(0);					//Background colour = (0,0,0)
-	glm::vec3 lightPos(0, 25, -80);				//Light's position inside the Cornell box
+	glm::vec3 backgroundCol(0);
+	glm::vec3 lightPos(0, 25, -80);
 	glm::vec3 color(0);
 	SceneObject* obj;
 
@@ -135,66 +135,64 @@ void initialize() {
 	texture = TextureBMP("../Butterfly.bmp");
 	glClearColor(0, 0, 0, 1);
 
-	// Create a Cornell-style box
+	// Create a Cornell-style box (increased size by 1.5x)
 	// Floor - checkered pattern will be implemented in the trace function
-	Plane *floor = new Plane(glm::vec3(-30, -15, -40),      // Point A
-		                    glm::vec3(30, -15, -40),       // Point B
-		                    glm::vec3(30, -15, -120),      // Point C
-		                    glm::vec3(-30, -15, -120));    // Point D
+	Plane *floor = new Plane(glm::vec3(-45, -22.5, -40),      // Point A (1.5x larger)
+		                    glm::vec3(45, -22.5, -40),       // Point B (1.5x larger)
+		                    glm::vec3(45, -22.5, -160),      // Point C (1.5x larger)
+		                    glm::vec3(-45, -22.5, -160));    // Point D (1.5x larger)
 	floor->setColor(glm::vec3(1, 1, 1));                // White base color for checkered pattern
 	floor->setSpecularity(false);
 	sceneObjects.push_back(floor);
 
 	// Left wall - green
-	Plane *leftWall = new Plane(glm::vec3(-30, -15, -40),    // Point A
-		                       glm::vec3(-30, -15, -120),   // Point B
-		                       glm::vec3(-30, 30, -120),    // Point C
-		                       glm::vec3(-30, 30, -40));    // Point D
+	Plane *leftWall = new Plane(glm::vec3(-45, -22.5, -40),    // Point A (1.5x larger)
+		                       glm::vec3(-45, -22.5, -160),   // Point B (1.5x larger)
+		                       glm::vec3(-45, 45, -160),      // Point C (1.5x larger)
+		                       glm::vec3(-45, 45, -40));      // Point D (1.5x larger)
 	leftWall->setColor(glm::vec3(0, 1, 0));              // Green
 	leftWall->setSpecularity(false);
 	sceneObjects.push_back(leftWall);
 
 	// Right wall - red
-	Plane *rightWall = new Plane(glm::vec3(30, -15, -40),    // Point A
-		                        glm::vec3(30, 30, -40),     // Point B
-		                        glm::vec3(30, 30, -120),    // Point C
-		                        glm::vec3(30, -15, -120));  // Point D
+	Plane *rightWall = new Plane(glm::vec3(45, -22.5, -40),    // Point A (1.5x larger)
+		                        glm::vec3(45, 45, -40),       // Point B (1.5x larger)
+		                        glm::vec3(45, 45, -160),      // Point C (1.5x larger)
+		                        glm::vec3(45, -22.5, -160));  // Point D (1.5x larger)
 	rightWall->setColor(glm::vec3(1, 0, 0));             // Red
 	rightWall->setSpecularity(false);
 	sceneObjects.push_back(rightWall);
 
 	// Back wall - white
-	Plane *backWall = new Plane(glm::vec3(-30, -15, -120),   // Point A
-		                       glm::vec3(30, -15, -120),    // Point B
-		                       glm::vec3(30, 30, -120),     // Point C
-		                       glm::vec3(-30, 30, -120));   // Point D
+	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),   // Point A (1.5x larger)
+		                       glm::vec3(45, -22.5, -160),    // Point B (1.5x larger)
+		                       glm::vec3(45, 45, -160),       // Point C (1.5x larger)
+		                       glm::vec3(-45, 45, -160));     // Point D (1.5x larger)
 	backWall->setColor(glm::vec3(1, 1, 1));              // White
 	backWall->setSpecularity(false);
 	sceneObjects.push_back(backWall);
 
 	// Ceiling - white
-	Plane *ceiling = new Plane(glm::vec3(-30, 30, -40),      // Point A
-		                      glm::vec3(30, 30, -40),       // Point B
-		                      glm::vec3(30, 30, -120),      // Point C
-		                      glm::vec3(-30, 30, -120));    // Point D
-	ceiling->setColor(glm::vec3(1, 1, 1));               // White
+	Plane *ceiling = new Plane(glm::vec3(-45, 45, -40),        // Point A (1.5x larger)
+		                      glm::vec3(45, 45, -40),         // Point B (1.5x larger)
+		                      glm::vec3(45, 45, -160),        // Point C (1.5x larger)
+		                      glm::vec3(-45, 45, -160));      // Point D (1.5x larger)
+	ceiling->setColor(glm::vec3(1, 1, 1));// White
 	ceiling->setSpecularity(false);
 	sceneObjects.push_back(ceiling);
 
 	// Front wall (optional, since we're looking through it)
 	// Uncomment if you want a complete box
-	/*
-	Plane *frontWall = new Plane(glm::vec3(-30, -15, -40),   // Point A
-		                        glm::vec3(-30, 30, -40),    // Point B
-		                        glm::vec3(30, 30, -40),     // Point C
-		                        glm::vec3(30, -15, -40));   // Point D
-	frontWall->setColor(glm::vec3(1, 1, 1));             // White
-	frontWall->setSpecularity(false);
-	sceneObjects.push_back(frontWall);
-	*/
+	// Plane *frontWall = new Plane(glm::vec3(-30, -15, -40),   // Point A
+	// 	                        glm::vec3(-30, 30, -40),    // Point B
+	// 	                        glm::vec3(30, 30, -40),     // Point C
+	// 	                        glm::vec3(30, -15, -40));   // Point D
+	// frontWall->setColor(glm::vec3(1, 1, 1));             // White
+	// frontWall->setSpecularity(false);
+	// sceneObjects.push_back(frontWall);
 
-	// Add a sphere inside the Cornell box for testing
-	Sphere *sphere1 = new Sphere(glm::vec3(0, 0, -80), 10.0);
+	// Add a smaller sphere inside the Cornell box, positioned closer to the back wall
+	Sphere *sphere1 = new Sphere(glm::vec3(0, -10, -80), 14.0);  // Smaller radius, closer to back wall
 	sphere1->setColor(glm::vec3(0, 0, 1));   // Blue
 	sphere1->setReflectivity(true, 0.8);
 	sceneObjects.push_back(sphere1);
