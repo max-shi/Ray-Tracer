@@ -89,7 +89,24 @@ glm::vec3 trace(Ray ray, int step) {
 		color = ambientLight * obj->getColor();
 	}
 	
-	// Handle reflections before clamping
+	// Handle transparency - must be done before reflections
+	if (obj->isTransparent() && step < MAX_STEPS)
+	{
+		float tran = obj->getTransparencyCoeff();
+		// Create a ray that continues in the same direction from the hit point
+		Ray transparentRay(ray.hit, ray.dir);
+		// Find the next object behind the transparent object
+		transparentRay.closestPt(sceneObjects);
+		
+		if (transparentRay.index > -1) {
+			// Get the color from the object behind the transparent object
+			glm::vec3 transparentColor = trace(transparentRay, step + 1);
+			// Blend the current color with the transparent color
+			color = (1.0f - tran) * color + tran * transparentColor;
+		}
+	}
+	
+	// Handle reflections after transparency
 	if (obj->isReflective() && step < MAX_STEPS)
 	{
 		float rho = obj->getReflectionCoeff();
@@ -215,10 +232,11 @@ void initialize() {
 	sceneObjects.push_back(ceiling);
 
 	// Add four orbs spaced evenly in the scene
-	// Orb 1 - top left
+	// Orb 1 - top left (transparent sphere)
 	Sphere *sphere1 = new Sphere(glm::vec3(-20, 0, -40), 7.0);
-	sphere1->setColor(glm::vec3(1, 0, 1));   // Magenta
-	sphere1->setReflectivity(true, 0.8);    // Reduced reflection coefficient
+	sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));   // Light blue tint for transparency
+	sphere1->setReflectivity(true, 0.3);    // Reduced reflection coefficient for transparency
+	sphere1->setTransparency(true, 0.7);    // Make this sphere transparent with 70% transparency
 	sceneObjects.push_back(sphere1);
 
 	// Orb 2 - top right
