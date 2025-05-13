@@ -8,7 +8,6 @@ using namespace std;
 
 /*Considerations to make still: TODO
  *  The Durand-Kerner method is relatively expensive compared to analytical solutions for simpler shapes.
- You might want to add a bounding sphere check first to avoid the quartic solver when possible.
  The number of iterations (currently 100) can be adjusted based on quality needs.
  *
  */
@@ -24,8 +23,17 @@ Torus::Torus(glm::vec3 center, float majorRadius, float minorRadius)
 }
 
 void Torus::rotate(float angle, glm::vec3 axis) {
+    // Create a translation matrix to move to origin
+    glm::mat4 toOrigin = glm::translate(glm::mat4(1.0f), -center);
+    
+    // Create a rotation matrix
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), axis);
-    transform = rotation * transform;
+    
+    // Create a translation matrix to move back
+    glm::mat4 fromOrigin = glm::translate(glm::mat4(1.0f), center);
+    
+    // Apply the transformations in sequence: translate to origin, rotate, translate back
+    transform = fromOrigin * rotation * toOrigin * transform;
     invTransform = glm::inverse(transform);
 }
 
