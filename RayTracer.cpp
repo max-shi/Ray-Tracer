@@ -34,8 +34,8 @@ vector<SceneObject*> sceneObjects;
 //     closest point of intersection with objects in the scene.
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step) {
-	glm::vec3 backgroundCol(0);
-	glm::vec3 lightPos(0, 25, -80);
+	glm::vec3 backgroundCol(0);					//Background colour = (0,0,0)
+	glm::vec3 lightPos(0, 44, -80);				//Light's position at the top of the Cornell box
 	glm::vec3 color(0);
 	SceneObject* obj;
 
@@ -135,67 +135,87 @@ void initialize() {
 	texture = TextureBMP("../Butterfly.bmp");
 	glClearColor(0, 0, 0, 1);
 
-	// Create a Cornell-style box (increased size by 1.5x)
+	// Create a Cornell-style box with camera positioned closer to the back wall
+	// The walls are positioned to make it seem like the camera is closer to the back
+
 	// Floor - checkered pattern will be implemented in the trace function
-	Plane *floor = new Plane(glm::vec3(-45, -22.5, -40),      // Point A (1.5x larger)
-		                    glm::vec3(45, -22.5, -40),       // Point B (1.5x larger)
-		                    glm::vec3(45, -22.5, -160),      // Point C (1.5x larger)
-		                    glm::vec3(-45, -22.5, -160));    // Point D (1.5x larger)
+	Plane *floor = new Plane(glm::vec3(-45, -22.5, 0),      // Point A
+		                    glm::vec3(45, -22.5, 0),       // Point B
+		                    glm::vec3(45, -22.5, -160),    // Point C
+		                    glm::vec3(-45, -22.5, -160));  // Point D
 	floor->setColor(glm::vec3(1, 1, 1));                // White base color for checkered pattern
 	floor->setSpecularity(false);
 	sceneObjects.push_back(floor);
 
-	// Left wall - green
-	Plane *leftWall = new Plane(glm::vec3(-45, -22.5, -40),    // Point A (1.5x larger)
-		                       glm::vec3(-45, -22.5, -160),   // Point B (1.5x larger)
-		                       glm::vec3(-45, 45, -160),      // Point C (1.5x larger)
-		                       glm::vec3(-45, 45, -40));      // Point D (1.5x larger)
-	leftWall->setColor(glm::vec3(0, 1, 0));              // Green
+	// Left wall - RED (changed from green)
+	Plane *leftWall = new Plane(glm::vec3(-45, -22.5, 0),    // Point A
+		                       glm::vec3(-45, -22.5, -160), // Point B
+		                       glm::vec3(-45, 45, -160),    // Point C
+		                       glm::vec3(-45, 45, 0));      // Point D
+	leftWall->setColor(glm::vec3(1, 0, 0));              // Red
 	leftWall->setSpecularity(false);
 	sceneObjects.push_back(leftWall);
 
-	// Right wall - red
-	Plane *rightWall = new Plane(glm::vec3(45, -22.5, -40),    // Point A (1.5x larger)
-		                        glm::vec3(45, 45, -40),       // Point B (1.5x larger)
-		                        glm::vec3(45, 45, -160),      // Point C (1.5x larger)
-		                        glm::vec3(45, -22.5, -160));  // Point D (1.5x larger)
-	rightWall->setColor(glm::vec3(1, 0, 0));             // Red
+	// Right wall - GREEN (changed from red)
+	Plane *rightWall = new Plane(glm::vec3(45, -22.5, 0),    // Point A
+		                        glm::vec3(45, 45, 0),       // Point B
+		                        glm::vec3(45, 45, -160),    // Point C
+		                        glm::vec3(45, -22.5, -160));// Point D
+	rightWall->setColor(glm::vec3(0, 1, 0));             // Green
 	rightWall->setSpecularity(false);
 	sceneObjects.push_back(rightWall);
 
-	// Back wall - white
-	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),   // Point A (1.5x larger)
-		                       glm::vec3(45, -22.5, -160),    // Point B (1.5x larger)
-		                       glm::vec3(45, 45, -160),       // Point C (1.5x larger)
-		                       glm::vec3(-45, 45, -160));     // Point D (1.5x larger)
+	// Back wall (behind camera) - WHITE (swapped with front wall)
+	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),   // Point A
+		                       glm::vec3(45, -22.5, -160),    // Point B
+		                       glm::vec3(45, 45, -160),       // Point C
+		                       glm::vec3(-45, 45, -160));     // Point D
 	backWall->setColor(glm::vec3(1, 1, 1));              // White
 	backWall->setSpecularity(false);
 	sceneObjects.push_back(backWall);
 
-	// Ceiling - white
-	Plane *ceiling = new Plane(glm::vec3(-45, 45, -40),        // Point A (1.5x larger)
-		                      glm::vec3(45, 45, -40),         // Point B (1.5x larger)
-		                      glm::vec3(45, 45, -160),        // Point C (1.5x larger)
-		                      glm::vec3(-45, 45, -160));      // Point D (1.5x larger)
-	ceiling->setColor(glm::vec3(1, 1, 1));// White
+	// Front wall (where you are facing) - BABY BLUE (swapped with back wall)
+	Plane *frontWall = new Plane(glm::vec3(-45, -22.5, 0),   // Point A
+		                        glm::vec3(-45, 45, 0),      // Point B
+		                        glm::vec3(45, 45, 0),       // Point C
+		                        glm::vec3(45, -22.5, 0));   // Point D
+	frontWall->setColor(glm::vec3(0.68, 0.85, 0.9));     // Light baby blue
+	frontWall->setSpecularity(false);
+	sceneObjects.push_back(frontWall);
+
+	// Ceiling - GREY with light source
+	Plane *ceiling = new Plane(glm::vec3(-45, 45, 0),        // Point A
+		                      glm::vec3(45, 45, 0),         // Point B
+		                      glm::vec3(45, 45, -160),      // Point C
+		                      glm::vec3(-45, 45, -160));    // Point D
+	ceiling->setColor(glm::vec3(0.7, 0.7, 0.7));         // Grey
 	ceiling->setSpecularity(false);
 	sceneObjects.push_back(ceiling);
 
-	// Front wall (optional, since we're looking through it)
-	// Uncomment if you want a complete box
-	// Plane *frontWall = new Plane(glm::vec3(-30, -15, -40),   // Point A
-	// 	                        glm::vec3(-30, 30, -40),    // Point B
-	// 	                        glm::vec3(30, 30, -40),     // Point C
-	// 	                        glm::vec3(30, -15, -40));   // Point D
-	// frontWall->setColor(glm::vec3(1, 1, 1));             // White
-	// frontWall->setSpecularity(false);
-	// sceneObjects.push_back(frontWall);
-
-	// Add a smaller sphere inside the Cornell box, positioned closer to the back wall
-	Sphere *sphere1 = new Sphere(glm::vec3(0, -10, -80), 14.0);  // Smaller radius, closer to back wall
-	sphere1->setColor(glm::vec3(0, 0, 1));   // Blue
+	// Add four orbs spaced evenly in the scene
+	// Orb 1 - top left
+	Sphere *sphere1 = new Sphere(glm::vec3(-20, 0, -40), 7.0);
+	sphere1->setColor(glm::vec3(1, 0, 1));   // Magenta
 	sphere1->setReflectivity(true, 0.8);
 	sceneObjects.push_back(sphere1);
+
+	// Orb 2 - top right
+	Sphere *sphere2 = new Sphere(glm::vec3(20, 0, -40), 7.0);
+	sphere2->setColor(glm::vec3(1, 1, 0));   // Yellow
+	sphere2->setReflectivity(true, 0.6);
+	sceneObjects.push_back(sphere2);
+
+	// Orb 3 - bottom left
+	Sphere *sphere3 = new Sphere(glm::vec3(-20, 0, -120), 7.0);
+	sphere3->setColor(glm::vec3(0, 1, 1));   // Cyan
+	sphere3->setReflectivity(true, 0.7);
+	sceneObjects.push_back(sphere3);
+
+	// Orb 4 - bottom right
+	Sphere *sphere4 = new Sphere(glm::vec3(20, 0, -120), 7.0);
+	sphere4->setColor(glm::vec3(1, 0.5, 0));   // Orange
+	sphere4->setReflectivity(true, 0.5);
+	sceneObjects.push_back(sphere4);
 }
 
 int main(int argc, char *argv[]) {
