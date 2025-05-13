@@ -199,16 +199,17 @@ void initialize() {
 		                        glm::vec3(45, 45, 0),       // Point B
 		                        glm::vec3(45, 45, -160),    // Point C
 		                        glm::vec3(45, -22.5, -160));// Point D
-	rightWall->setColor(glm::vec3(0, 1, 0));             // Green
-	rightWall->setSpecularity(false);
-	sceneObjects.push_back(rightWall);
+	rightWall->setColor(glm::vec3(0.9, 0.9, 0.9));             // Green
+	rightWall->setSpecularity(true);                       // Enable specularity for mirror-like shine
+	rightWall->setShininess(100.0);                        // High shininess for mirror effect
+	rightWall->setReflectivity(true, 0.9);       	sceneObjects.push_back(rightWall);
 
-	// Back wall (behind camera) - WHITE (swapped with front wall)
+	// Back wall (behind camera) - Mirror-like reflective surface
 	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),   // Point A
 		                       glm::vec3(45, -22.5, -160),    // Point B
 		                       glm::vec3(45, 45, -160),       // Point C
 		                       glm::vec3(-45, 45, -160));     // Point D
-	backWall->setColor(glm::vec3(1, 1, 1));              // White
+	backWall->setColor(glm::vec3(0, 0.6, 0));              // White
 	backWall->setSpecularity(false);
 	sceneObjects.push_back(backWall);
 
