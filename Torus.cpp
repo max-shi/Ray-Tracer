@@ -40,6 +40,35 @@ void Torus::scale(glm::vec3 scale) {
     transform = scaleMat * transform;
     invTransform = glm::inverse(transform);
 }
+bool Torus::intersectBoundingSphere(glm::vec3 p0, glm::vec3 dir, float& t) const {
+    // Transform ray to torus's local coordinate system
+    glm::vec4 localP0_4 = invTransform * glm::vec4(p0, 1.0f);
+    glm::vec4 localDir_4 = invTransform * glm::vec4(dir, 0.0f);
+
+    glm::vec3 localP0 = glm::vec3(localP0_4) - center;
+    glm::vec3 localDir = glm::vec3(localDir_4);
+
+    // The bounding sphere radius is majorRadius + minorRadius
+    float boundRadius = majorRadius + minorRadius;
+
+    // Solve quadratic equation for sphere intersection
+    float a = glm::dot(localDir, localDir);
+    float b = 2.0f * glm::dot(localP0, localDir);
+    float c = glm::dot(localP0, localP0) - boundRadius * boundRadius;
+
+    float discriminant = b * b - 4.0f * a * c;
+
+    if (discriminant < 0.0f) {
+        return false; // No intersection
+    }
+
+    float sqrtDisc = sqrt(discriminant);
+    float t1 = (-b - sqrtDisc) / (2.0f * a);
+    float t2 = (-b + sqrtDisc) / (2.0f * a);
+
+    t = (t1 > 0.0f) ? t1 : t2;
+    return (t > 0.0f);
+}
 
 vector<float> Torus::solveQuartic(const vector<double>& coeffs) const {
     const int maxIterations = 100;
@@ -99,12 +128,18 @@ vector<float> Torus::solveQuartic(const vector<double>& coeffs) const {
 }
 
 float Torus::intersect(glm::vec3 p0, glm::vec3 dir) {
-    // Transform ray to torus's local coordinate system
-    glm::vec3 localP0 = p0 - center;
-    glm::vec3 localDir = dir;
+    // First check bounding sphere
+    float boundT;
+    if (!intersectBoundingSphere(p0, dir, boundT)) {
+        return -1.0f; // Early exit if no intersection with bounding sphere
+    }
 
-    // For simplicity, assume torus is axis-aligned (axis = (0,1,0))
-    // In a complete implementation, we would transform the ray to object space
+    // Transform ray to torus's local coordinate system using the transformation matrices
+    glm::vec4 localP0_4 = invTransform * glm::vec4(p0, 1.0f);
+    glm::vec4 localDir_4 = invTransform * glm::vec4(dir, 0.0f);
+    
+    glm::vec3 localP0 = glm::vec3(localP0_4) - center;
+    glm::vec3 localDir = glm::vec3(localDir_4);
 
     // Precompute values
     double Ex = localDir.x, Ey = localDir.y, Ez = localDir.z;
@@ -150,11 +185,9 @@ float Torus::intersect(glm::vec3 p0, glm::vec3 dir) {
 }
 
 glm::vec3 Torus::normal(glm::vec3 p) {
-    // Transform point to torus's local coordinate system
-    glm::vec3 localP = p - center;
-
-    // For simplicity, assume torus is axis-aligned (axis = (0,1,0))
-    // In a complete implementation, we would transform the point to object space
+    // Transform point to torus's local coordinate system using the transformation matrices
+    glm::vec4 localP_4 = invTransform * glm::vec4(p, 1.0f);
+    glm::vec3 localP = glm::vec3(localP_4) - center;
 
     // Compute Q (center of the tube nearest to P)
     double Px = localP.x, Py = localP.y, Pz = localP.z;
@@ -164,6 +197,9 @@ glm::vec3 Torus::normal(glm::vec3 p) {
     // Compute normal vector N = P - Q
     glm::vec3 N = localP - Q;
 
-    // Return normalized normal
-    return glm::normalize(N);
+    // Transform normal back to world space and return normalized
+    // For normals, we need to use the transpose of the inverse of the upper 3x3 part of the transform matrix
+    glm::vec4 worldN_4 = glm::transpose(invTransform) * glm::vec4(N, 0.0f);
+    return glm::normalize(glm::vec3(worldN_4));
 }
+

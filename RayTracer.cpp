@@ -21,7 +21,7 @@ using namespace std;
 
 TextureBMP texture;
 const float EDIST = 40;
-const int NUMDIV = 500;
+const int NUMDIV = 400;
 const int MAX_STEPS = 2;
 const float XMIN = -20.0;  // Widened viewing window
 const float XMAX = 20.0;   // Widened viewing window
@@ -171,7 +171,6 @@ void display() {
 void initialize() {
 	glMatrixMode(GL_PROJECTION);
 	gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
-	texture = TextureBMP("../Butterfly.bmp");
 	glClearColor(0, 0, 0, 1);
 
 	// Create a Cornell-style box with camera positioned closer to the back wall
@@ -250,9 +249,9 @@ void initialize() {
 	// sceneObjects.push_back(sphere3);
 
 	// Add a torus to the scene
-	Torus* torus = new Torus(glm::vec3(-7, 0, -40), 15.0f, 5.0f);
+	Torus* torus = new Torus(glm::vec3(15, 0, -40), 9.0f, 3.0f);
 	// torus->translate(glm::vec3(-5, 0, -80)); // Move to position
-	torus->rotate(30.0f, glm::vec3(1, 0, 0)); // Rotate around Y
+	torus->rotate(15.0f, glm::vec3(1, 1, 0)); // Rotate around Y
 	// torus->rotate(15.0f, glm::vec3(1, 0, 0)); // Additional rotation around X
 	torus->setColor(glm::vec3(0.8, 0.2, 0.2));  // Reddish colo
 	torus->setSpecularity(true);
