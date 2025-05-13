@@ -19,7 +19,7 @@
 using namespace std;
 
 TextureBMP texture;
-const float EDIST = 40;  // Reduced eye distance to zoom out
+const float EDIST = 40;
 const int NUMDIV = 500;
 const int MAX_STEPS = 5;
 const float XMIN = -20.0;  // Widened viewing window
@@ -35,9 +35,9 @@ vector<SceneObject*> sceneObjects;
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step) {
 	glm::vec3 backgroundCol(0);					//Background colour = (0,0,0)
-	glm::vec3 lightPos(0, 44, -80);				//Light's position at the top of the Cornell box
+	glm::vec3 lightPos(0, 40, -90);				//Light's position at the top of the Cornell box
 	// Add a small ambient light component to ensure all surfaces have some illumination
-	glm::vec3 ambientLight(0.2, 0.2, 0.2);
+	glm::vec3 ambientLight(0.2, 0.2, 0.2);	// Slightly increased ambient light
 	glm::vec3 color(0);
 	SceneObject* obj;
 
@@ -65,25 +65,31 @@ glm::vec3 trace(Ray ray, int step) {
 	}
 	//object on which the closest point of intersection is found
 
-
-	// Calculate base color with lighting
-	color = obj->lighting(lightPos, -ray.dir, ray.hit);
+	// Calculate distance to light for attenuation
+	glm::vec3 LightVec = lightPos - ray.hit;
+	float lightDist = glm::length(LightVec);
+	
+	// Apply light attenuation based on distance (slightly reduced attenuation)
+	float attenuation = 1.0f / (1.0f + 0.0008f * lightDist + 0.0004f * lightDist * lightDist);
+	
+	// Adjust light intensity
+	float lightIntensity = 1.2f;
+	
+	// Calculate base color with lighting and apply attenuation
+	color = obj->lighting(lightPos, -ray.dir, ray.hit) * attenuation * lightIntensity;
 	
 	// Add ambient light to ensure all surfaces have some illumination
 	color += ambientLight * obj->getColor();
 	
 	// Shadow calculation
-	glm::vec3 LightVec = lightPos - ray.hit;
 	Ray shadowRay(ray.hit, LightVec);
 	shadowRay.closestPt(sceneObjects);
-	float lightDist = glm::length(LightVec);
 	if (shadowRay.index > -1 && shadowRay.dist < lightDist) {
 		// In shadow - reduce to ambient only
 		color = ambientLight * obj->getColor();
 	}
 	
-	// Ensure color values don't exceed 1.0
-	color = glm::clamp(color, 0.0f, 1.0f);
+	// Handle reflections before clamping
 	if (obj->isReflective() && step < MAX_STEPS)
 	{
 		float rho = obj->getReflectionCoeff();
@@ -93,6 +99,10 @@ glm::vec3 trace(Ray ray, int step) {
 		glm::vec3 reflectedColor = trace(reflectedRay, step + 1);
 		color = color + (rho * reflectedColor);
 	}
+	
+	// Ensure color values don't exceed 1.0 (moved after reflection)
+	color = glm::clamp(color, 0.0f, 1.0f);
+	
 	return color;
 }
 
@@ -208,25 +218,25 @@ void initialize() {
 	// Orb 1 - top left
 	Sphere *sphere1 = new Sphere(glm::vec3(-20, 0, -40), 7.0);
 	sphere1->setColor(glm::vec3(1, 0, 1));   // Magenta
-	sphere1->setReflectivity(true, 0.8);
+	sphere1->setReflectivity(true, 0.8);    // Reduced reflection coefficient
 	sceneObjects.push_back(sphere1);
 
 	// Orb 2 - top right
 	Sphere *sphere2 = new Sphere(glm::vec3(20, 0, -40), 7.0);
 	sphere2->setColor(glm::vec3(1, 1, 0));   // Yellow
-	sphere2->setReflectivity(true, 0.6);
+	sphere2->setReflectivity(true, 0.8);    // Reduced reflection coefficient
 	sceneObjects.push_back(sphere2);
 
 	// Orb 3 - bottom left
 	Sphere *sphere3 = new Sphere(glm::vec3(-20, 0, -120), 7.0);
 	sphere3->setColor(glm::vec3(0, 1, 1));   // Cyan
-	sphere3->setReflectivity(true, 0.7);
+	sphere3->setReflectivity(true, 0.8);   // Reduced reflection coefficient
 	sceneObjects.push_back(sphere3);
 
 	// Orb 4 - bottom right
 	Sphere *sphere4 = new Sphere(glm::vec3(20, 0, -120), 7.0);
 	sphere4->setColor(glm::vec3(1, 0.5, 0));   // Orange
-	sphere4->setReflectivity(true, 0.5);
+	sphere4->setReflectivity(true, 0.8);    // Reduced reflection coefficient
 	sceneObjects.push_back(sphere4);
 }
 
