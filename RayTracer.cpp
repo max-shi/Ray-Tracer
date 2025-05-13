@@ -202,7 +202,8 @@ void initialize() {
 	rightWall->setColor(glm::vec3(0.9, 0.9, 0.9));             // Green
 	rightWall->setSpecularity(true);                       // Enable specularity for mirror-like shine
 	rightWall->setShininess(100.0);                        // High shininess for mirror effect
-	rightWall->setReflectivity(true, 0.9);       	sceneObjects.push_back(rightWall);
+	rightWall->setReflectivity(true, 0.9);
+	sceneObjects.push_back(rightWall);
 
 	// Back wall (behind camera) - Mirror-like reflective surface
 	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),   // Point A
