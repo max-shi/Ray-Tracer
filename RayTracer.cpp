@@ -16,12 +16,13 @@
 #include "Ray.h"
 #include <GL/freeglut.h>
 #include "TextureBMP.h"
+#include "Torus.h"
 using namespace std;
 
 TextureBMP texture;
 const float EDIST = 40;
 const int NUMDIV = 500;
-const int MAX_STEPS = 5;
+const int MAX_STEPS = 2;
 const float XMIN = -20.0;  // Widened viewing window
 const float XMAX = 20.0;   // Widened viewing window
 const float YMIN = -20.0;  // Widened viewing window
@@ -194,7 +195,7 @@ void initialize() {
 	leftWall->setSpecularity(false);
 	sceneObjects.push_back(leftWall);
 
-	// Right wall - GREEN (changed from red)
+	// Right wall - Silver, Reflective.
 	Plane *rightWall = new Plane(glm::vec3(45, -22.5, 0),    // Point A
 		                        glm::vec3(45, 45, 0),       // Point B
 		                        glm::vec3(45, 45, -160),    // Point C
@@ -205,12 +206,12 @@ void initialize() {
 	rightWall->setReflectivity(true, 0.9);
 	sceneObjects.push_back(rightWall);
 
-	// Back wall (behind camera) - Mirror-like reflective surface
+	// Back wall (behind camera) - Green
 	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),   // Point A
 		                       glm::vec3(45, -22.5, -160),    // Point B
 		                       glm::vec3(45, 45, -160),       // Point C
 		                       glm::vec3(-45, 45, -160));     // Point D
-	backWall->setColor(glm::vec3(0, 0.6, 0));              // White
+	backWall->setColor(glm::vec3(0.2039f, 0.9216f, 0.5725f));              // White
 	backWall->setSpecularity(false);
 	sceneObjects.push_back(backWall);
 
@@ -235,35 +236,35 @@ void initialize() {
 
 	// Add four orbs spaced evenly in the scene
 	// Orb 1 - top left (transparent sphere)
-	Sphere *sphere1 = new Sphere(glm::vec3(-20, 0, -40), 7.0);
+	Sphere *sphere1 = new Sphere(glm::vec3(-10, 0, -40), 3.0);
 	sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));   // Light blue tint for transparency
 	sphere1->setReflectivity(true, 0.3);    // Reduced reflection coefficient for transparency
 	sphere1->setTransparency(true, 0.7);    // Make this sphere transparent with 70% transparency
 	sceneObjects.push_back(sphere1);
 
-	// Orb 2 - top right
-	Sphere *sphere2 = new Sphere(glm::vec3(20, 0, -40), 7.0);
-	sphere2->setColor(glm::vec3(1, 1, 0));   // Yellow
-	sphere2->setReflectivity(true, 0.8);    // Reduced reflection coefficient
-	sceneObjects.push_back(sphere2);
 
-	// Orb 3 - bottom left
-	Sphere *sphere3 = new Sphere(glm::vec3(-20, 0, -120), 7.0);
-	sphere3->setColor(glm::vec3(0, 1, 1));   // Cyan
-	sphere3->setReflectivity(true, 0.8);   // Reduced reflection coefficient
-	sceneObjects.push_back(sphere3);
+	// // Orb 3 - bottom left
+	// Sphere *sphere3 = new Sphere(glm::vec3(-5, 0, -80), 13.0);
+	// sphere3->setColor(glm::vec3(0, 1, 1));   // Cyan
+	// sphere3->setReflectivity(true, 0.8);   // Reduced reflection coefficient
+	// sceneObjects.push_back(sphere3);
 
-	// Orb 4 - bottom right
-	Sphere *sphere4 = new Sphere(glm::vec3(20, 0, -120), 7.0);
-	sphere4->setColor(glm::vec3(1, 0.5, 0));   // Orange
-	sphere4->setReflectivity(true, 0.8);    // Reduced reflection coefficient
-	sceneObjects.push_back(sphere4);
+	// Add a torus to the scene
+	Torus* torus = new Torus(glm::vec3(-7, 0, -40), 15.0f, 5.0f);
+	// torus->translate(glm::vec3(-5, 0, -80)); // Move to position
+	torus->rotate(30.0f, glm::vec3(1, 0, 0)); // Rotate around Y
+	// torus->rotate(15.0f, glm::vec3(1, 0, 0)); // Additional rotation around X
+	torus->setColor(glm::vec3(0.8, 0.2, 0.2));  // Reddish colo
+	torus->setSpecularity(true);
+	torus->setShininess(50.0f);
+	torus->setReflectivity(true, 0.3f);
+	sceneObjects.push_back(torus);
 }
 
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB );
-	glutInitWindowSize(500, 500);
+	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(20, 20);
 	glutCreateWindow("Raytracing");
 
