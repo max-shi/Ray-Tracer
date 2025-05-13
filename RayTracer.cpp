@@ -36,6 +36,8 @@ vector<SceneObject*> sceneObjects;
 glm::vec3 trace(Ray ray, int step) {
 	glm::vec3 backgroundCol(0);					//Background colour = (0,0,0)
 	glm::vec3 lightPos(0, 44, -80);				//Light's position at the top of the Cornell box
+	// Add a small ambient light component to ensure all surfaces have some illumination
+	glm::vec3 ambientLight(0.2, 0.2, 0.2);
 	glm::vec3 color(0);
 	SceneObject* obj;
 
@@ -64,15 +66,24 @@ glm::vec3 trace(Ray ray, int step) {
 	//object on which the closest point of intersection is found
 
 
-	color = obj->lighting(lightPos, -ray.dir, ray.hit);						//Object's colour
+	// Calculate base color with lighting
+	color = obj->lighting(lightPos, -ray.dir, ray.hit);
+	
+	// Add ambient light to ensure all surfaces have some illumination
+	color += ambientLight * obj->getColor();
+	
+	// Shadow calculation
 	glm::vec3 LightVec = lightPos - ray.hit;
 	Ray shadowRay(ray.hit, LightVec);
 	shadowRay.closestPt(sceneObjects);
 	float lightDist = glm::length(LightVec);
 	if (shadowRay.index > -1 && shadowRay.dist < lightDist) {
-		// In shadow
-		color = 0.2f * obj->getColor();  // Only ambient lighting
+		// In shadow - reduce to ambient only
+		color = ambientLight * obj->getColor();
 	}
+	
+	// Ensure color values don't exceed 1.0
+	color = glm::clamp(color, 0.0f, 1.0f);
 	if (obj->isReflective() && step < MAX_STEPS)
 	{
 		float rho = obj->getReflectionCoeff();
@@ -184,10 +195,11 @@ void initialize() {
 	sceneObjects.push_back(frontWall);
 
 	// Ceiling - GREY with light source
+	// Reordered vertices to make normal point upward
 	Plane *ceiling = new Plane(glm::vec3(-45, 45, 0),        // Point A
-		                      glm::vec3(45, 45, 0),         // Point B
+		                      glm::vec3(-45, 45, -160),     // Point B
 		                      glm::vec3(45, 45, -160),      // Point C
-		                      glm::vec3(-45, 45, -160));    // Point D
+		                      glm::vec3(45, 45, 0));        // Point D
 	ceiling->setColor(glm::vec3(0.7, 0.7, 0.7));         // Grey
 	ceiling->setSpecularity(false);
 	sceneObjects.push_back(ceiling);
