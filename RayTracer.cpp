@@ -21,7 +21,7 @@ using namespace std;
 
 TextureBMP texture;
 const float EDIST = 40;
-const int NUMDIV = 400;
+const int NUMDIV = 500;
 const int MAX_STEPS = 2;
 const float XMIN = -20.0;  // Widened viewing window
 const float XMAX = 20.0;   // Widened viewing window
@@ -207,15 +207,14 @@ void initialize() {
 	sceneObjects.push_back(rightWall);
 
 	// Back wall (behind camera) - Green
-	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),   // Point A
-		                       glm::vec3(45, -22.5, -160),    // Point B
-		                       glm::vec3(45, 45, -160),       // Point C
-		                       glm::vec3(-45, 45, -160));     // Point D
-	backWall->setColor(glm::vec3(0.2039f, 0.9216f, 0.5725f));              // White
-	backWall->setColor(glm::vec3(0.9, 0.9, 0.9));             // Green
-	backWall->setSpecularity(true);                       // Enable specularity for mirror-like shine
-	backWall->setShininess(100.0);                        // High shininess for mirror effect
-	backWall->setReflectivity(true, 0.9);	sceneObjects.push_back(backWall);
+	Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),
+		                       glm::vec3(45, -22.5, -160),
+		                       glm::vec3(45, 45, -160),
+		                       glm::vec3(-45, 45, -160));
+	backWall->setColor(glm::vec3(0.9, 0.9, 0.9));
+	backWall->setSpecularity(true);
+	backWall->setShininess(100.0);
+	backWall->setReflectivity(true, 0.9);
 	sceneObjects.push_back(backWall);
 
 	// Front wall (where you are facing) - BABY BLUE (swapped with back wall)
@@ -261,6 +260,13 @@ void initialize() {
 	torus->setShininess(50.0f);
 	torus->setReflectivity(true, 0.3f);
 	sceneObjects.push_back(torus);
+
+	// instead of new Sphere(glm::vec3(x,y,z),r);
+	Sphere* flat = new Sphere(glm::vec3(25,-75,-100), 12.0f);
+	flat->scale   (glm::vec3(1.0f, 0.2f, 1.0f));   // squash in Y
+	flat->setColor(glm::vec3(0.8,0.2,0.6));
+	sceneObjects.push_back(flat);
+
 }
 
 int main(int argc, char *argv[]) {

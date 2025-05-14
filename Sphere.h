@@ -1,33 +1,54 @@
-/*----------------------------------------------------------
-* COSC363  Ray Tracer
-*
-*  The sphere class
-*  This is a subclass of SceneObject, and hence implements the
-*  methods intersect() and normal().
--------------------------------------------------------------*/
-
 #ifndef H_SPHERE
 #define H_SPHERE
-#include <glm/glm.hpp>
-#include "SceneObject.h"
 
-/**
- * Defines a simple Sphere located at 'center'
- * with the specified radius
- */
+#include "SceneObject.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+
 class Sphere : public SceneObject {
-private:
-	glm::vec3 center = glm::vec3(0);
-	float radius = 1;
+protected:
+	glm::vec3 center_;
+	float     radius_;
+
+	// exactly the same three matrices as in Torus
+	glm::mat4 transform_       = glm::mat4(1.0f);  // object → world
+	glm::mat4 invTransform_    = glm::mat4(1.0f);  // world → object
+	glm::mat4 normalTransform_ = glm::mat4(1.0f);  // transpose(invTransform_)
 
 public:
-	Sphere() {};  //Default constructor creates a unit sphere
+	Sphere(glm::vec3 center, float radius)
+	  : center_(center), radius_(radius)
+	{
+		// already identity
+	}
 
-	Sphere(glm::vec3 c, float r) : center(c), radius(r) {}
+	// build up your object-space transform
+	void translate(const glm::vec3& t) {
+		transform_    = glm::translate(glm::mat4(1.0f), t) * transform_;
+		invTransform_ = glm::inverse(transform_);
+		normalTransform_ = glm::transpose(invTransform_);
+	}
+	void rotate(float angleDeg, const glm::vec3& axis) {
+		// rotate about the sphere’s center
+		glm::mat4 toOrigin   = glm::translate(glm::mat4(1.0f), -center_);
+		glm::mat4 rot        = glm::rotate(glm::mat4(1.0f), glm::radians(angleDeg), axis);
+		glm::mat4 fromOrigin = glm::translate(glm::mat4(1.0f), center_);
+		transform_ = fromOrigin * rot * toOrigin * transform_;
+		invTransform_ = glm::inverse(transform_);
+		normalTransform_ = glm::transpose(invTransform_);
+	}
+	void scale(const glm::vec3& s) {
+		glm::mat4 S = glm::scale(glm::mat4(1.0f), s);
+		transform_ = S * transform_;
+		invTransform_ = glm::inverse(transform_);
+		normalTransform_ = glm::transpose(invTransform_);
+	}
 
-	float intersect(glm::vec3 p0, glm::vec3 dir);
-
-	glm::vec3 normal(glm::vec3 p);
+	// the two virtuals
+	float intersect(glm::vec3 p0, glm::vec3 dir) override;
+	glm::vec3 normal(glm::vec3 pos) override;
+	virtual ~Sphere() {}
 };
 
-#endif //!H_SPHERE
+#endif

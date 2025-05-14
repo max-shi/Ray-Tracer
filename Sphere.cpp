@@ -1,42 +1,45 @@
-/*----------------------------------------------------------
-* COSC363  Ray Tracer
-*
-*  The sphere class
-*  This is a subclass of SceneObject, and hence implements the
-*  methods intersect() and normal().
--------------------------------------------------------------*/
-
 #include "Sphere.h"
-#include <math.h>
+#include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
 
-/**
-* Sphere's intersection method.  The input is a ray. 
-*/
-float Sphere::intersect(glm::vec3 p0, glm::vec3 dir) {
-	glm::vec3 vdif = p0 - center;   //Vector s (see Slide 28)
-	float b = glm::dot(dir, vdif);
-	float len = glm::length(vdif);
-	float c = len*len - radius*radius;
-	float delta = b*b - c;
+float Sphere::intersect(glm::vec3 p0_world, glm::vec3 dir_world) {
+	// 1) Ray → object space
+	glm::vec4 p0o4 = invTransform_ * glm::vec4(p0_world, 1.0f);
+	glm::vec3  p0o  = glm::vec3(p0o4) / p0o4.w;
 
-	if(delta < 0.001) return -1.0;    //includes zero and negative values
+	glm::vec4 di4  = invTransform_ * glm::vec4(dir_world, 0.0f);
+	float   tScale = glm::length(glm::vec3(di4));
+	glm::vec3 dirO = glm::normalize(glm::vec3(di4));
 
-	float t1 = -b - sqrt(delta);
-	float t2 = -b + sqrt(delta);
+	// 2) Solve |p0o - center_|^2 = radius_^2
+	glm::vec3 L = p0o - center_;
+	float b = glm::dot(dirO, L);
+	float c = glm::dot(L, L) - radius_*radius_;
+	float disc = b*b - c;
+	if (disc < 0.0f) return -1.0f;
 
-	if (t1 < 0)
-	{
-		return (t2 > 0) ? t2 : -1;
-	}
-	else return t1;
+	float sqrtD = std::sqrt(disc);
+	float t1 = -b - sqrtD, t2 = -b + sqrtD;
+	if (t2 < 0.0f) return -1.0f;
+	float t_obj = (t1 > 0.0f ? t1 : t2) / tScale;
+
+	// 3) Map hit back to world
+	glm::vec3 hitO   = p0o + t_obj * dirO;
+	glm::vec4 hitW4 = transform_ * glm::vec4(hitO, 1.0f);
+	glm::vec3 hitW  = glm::vec3(hitW4) / hitW4.w;
+
+	return t_obj;
 }
 
-/**
-* Returns the unit normal vector at a given point.
-* Assumption: The input point p lies on the sphere.
-*/
-glm::vec3 Sphere::normal(glm::vec3 p) {
-	glm::vec3 n = p - center;
-	n = glm::normalize(n);
-	return n;
+glm::vec3 Sphere::normal(glm::vec3 hit_world) {
+	// 1) Hit → object space
+	glm::vec4 hitO4 = invTransform_ * glm::vec4(hit_world, 1.0f);
+	glm::vec3 hitO  = glm::vec3(hitO4) / hitO4.w;
+
+	// 2) normal in object space
+	glm::vec3 nO = glm::normalize(hitO - center_);
+
+	// 3) back to world via transpose(inverse)
+	glm::vec4 nW4 = normalTransform_ * glm::vec4(nO, 0.0f);
+	return glm::normalize(glm::vec3(nW4));
 }
