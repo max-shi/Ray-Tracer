@@ -27,6 +27,7 @@ const float XMIN = -20.0;  // Widened viewing window
 const float XMAX = 20.0;   // Widened viewing window
 const float YMIN = -20.0;  // Widened viewing window
 const float YMAX = 20.0;   // Widened viewing window
+bool antiAliasingEnabled = false; // tracks AA
 
 vector<SceneObject*> sceneObjects;
 
@@ -124,34 +125,53 @@ glm::vec3 trace(Ray ray, int step) {
 	return color;
 }
 
+glm::vec3 calculatePixelColor(float xp, float yp, float cellX, float cellY, const glm::vec3& eye) {
+	if (!antiAliasingEnabled) {
+		// Regular single sample
+		glm::vec3 dir(xp + 0.5f * cellX, yp + 0.5f * cellY, -EDIST);
+		Ray ray(eye, dir);
+		return trace(ray, 1);
+	} else {
+		// Supersampling with 4 samples per pixel
+		glm::vec3 color(0);
+		float offsets[4][2] = {{0.25f, 0.25f}, {0.25f, 0.75f}, {0.75f, 0.25f}, {0.75f, 0.75f}};
+
+		for (int i = 0; i < 4; i++) {
+			glm::vec3 dir(xp + offsets[i][0] * cellX, yp + offsets[i][1] * cellY, -EDIST);
+			Ray ray(eye, dir);
+			color += trace(ray, 1);
+		}
+
+		return color / 4.0f;  // Average the samples
+	}
+}
+
+
+
 //---The main display module -----------------------------------------------------------
 // In a ray tracing application, it just displays the ray traced image by drawing
 // each cell as a quad.
 //---------------------------------------------------------------------------------------
 void display() {
-	float xp, yp;  //grid point
-	float cellX = (XMAX - XMIN) / NUMDIV;  //cell width
-	float cellY = (YMAX - YMIN) / NUMDIV;  //cell height
+	float xp, yp;
+	float cellX = (XMAX - XMIN) / NUMDIV;
+	float cellY = (YMAX - YMIN) / NUMDIV;
 	glm::vec3 eye(0., 0., 0.);
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	glBegin(GL_QUADS);  //Each cell is a tiny quad.
+	glBegin(GL_QUADS);
 
-	for (int i = 0; i < NUMDIV; i++) {	//Scan every cell of the image plane
+	for (int i = 0; i < NUMDIV; i++) {
 		xp = XMIN + i * cellX;
 		for (int j = 0; j < NUMDIV; j++) {
 			yp = YMIN + j * cellY;
 
-			glm::vec3 dir(xp + 0.5 * cellX, yp + 0.5 * cellY, -EDIST);	//direction of the primary ray
-
-			Ray ray = Ray(eye, dir);
-
-			glm::vec3 col = trace(ray, 1); //Trace the primary ray and get the colour value
+			glm::vec3 col = calculatePixelColor(xp, yp, cellX, cellY, eye);
 			glColor3f(col.r, col.g, col.b);
-			glVertex2f(xp, yp);				//Draw each cell with its color value
+			glVertex2f(xp, yp);
 			glVertex2f(xp + cellX, yp);
 			glVertex2f(xp + cellX, yp + cellY);
 			glVertex2f(xp, yp + cellY);
@@ -160,6 +180,13 @@ void display() {
 
 	glEnd();
 	glFlush();
+}
+void keyboard(unsigned char key, int x, int y) {
+	if (key == 'a' || key == 'A') {
+		antiAliasingEnabled = !antiAliasingEnabled;
+		printf("Anti-aliasing %s\n", antiAliasingEnabled ? "ENABLED" : "DISABLED");
+		glutPostRedisplay();
+	}
 }
 
 //---This function initializes the scene ------------------------------------------- 
@@ -277,6 +304,7 @@ int main(int argc, char *argv[]) {
 	glutCreateWindow("Raytracing");
 
 	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
 	initialize();
 
 	glutMainLoop();
