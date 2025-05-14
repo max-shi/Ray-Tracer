@@ -237,7 +237,7 @@ void initialize() {
 
 	// Add four orbs spaced evenly in the scene
 	// Orb 1 - top left (transparent sphere)
-	Sphere *sphere1 = new Sphere(glm::vec3(-10, 0, -40), 3.0);
+	Sphere *sphere1 = new Sphere(glm::vec3(-10, 0, -100), 3.0);
 	sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));   // Light blue tint for transparency
 	sphere1->setReflectivity(true, 0.3);    // Reduced reflection coefficient for transparency
 	sphere1->setTransparency(true, 0.7);    // Make this sphere transparent with 70% transparency
