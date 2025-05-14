@@ -199,10 +199,11 @@ void initialize() {
 		                        glm::vec3(45, 45, 0),       // Point B
 		                        glm::vec3(45, 45, -160),    // Point C
 		                        glm::vec3(45, -22.5, -160));// Point D
-	rightWall->setColor(glm::vec3(0.9, 0.9, 0.9));             // Green
-	rightWall->setSpecularity(true);                       // Enable specularity for mirror-like shine
-	rightWall->setShininess(100.0);                        // High shininess for mirror effect
-	rightWall->setReflectivity(true, 0.9);
+	rightWall->setColor(glm::vec3(0.2, 0.8, 0.));
+	rightWall->setSpecularity(false);// Green
+	// rightWall->setSpecularity(true);                       // Enable specularity for mirror-like shine
+	// rightWall->setShininess(100.0);                        // High shininess for mirror effect
+	// rightWall->setReflectivity(true, 0.9);
 	sceneObjects.push_back(rightWall);
 
 	// Back wall (behind camera) - Green
@@ -211,7 +212,10 @@ void initialize() {
 		                       glm::vec3(45, 45, -160),       // Point C
 		                       glm::vec3(-45, 45, -160));     // Point D
 	backWall->setColor(glm::vec3(0.2039f, 0.9216f, 0.5725f));              // White
-	backWall->setSpecularity(false);
+	backWall->setColor(glm::vec3(0.9, 0.9, 0.9));             // Green
+	backWall->setSpecularity(true);                       // Enable specularity for mirror-like shine
+	backWall->setShininess(100.0);                        // High shininess for mirror effect
+	backWall->setReflectivity(true, 0.9);	sceneObjects.push_back(backWall);
 	sceneObjects.push_back(backWall);
 
 	// Front wall (where you are facing) - BABY BLUE (swapped with back wall)
@@ -220,7 +224,6 @@ void initialize() {
 		                        glm::vec3(45, 45, 0),       // Point C
 		                        glm::vec3(45, -22.5, 0));   // Point D
 	frontWall->setColor(glm::vec3(0.68, 0.85, 0.9));     // Light baby blue
-	frontWall->setSpecularity(false);
 	sceneObjects.push_back(frontWall);
 
 	// Ceiling - GREY with light source
@@ -243,15 +246,15 @@ void initialize() {
 
 
 	// // Orb 3 - bottom left
-	// Sphere *sphere3 = new Sphere(glm::vec3(-5, 0, -80), 13.0);
-	// sphere3->setColor(glm::vec3(0, 1, 1));   // Cyan
-	// sphere3->setReflectivity(true, 0.8);   // Reduced reflection coefficient
-	// sceneObjects.push_back(sphere3);
+	Sphere *sphere3 = new Sphere(glm::vec3(25, 0, -100), 4.0);
+	sphere3->setColor(glm::vec3(0, 1, 1));   // Cyan
+	sphere3->setReflectivity(true, 0.8);   // Reduced reflection coefficient
+	sceneObjects.push_back(sphere3);
 
 	// Add a torus to the scene
-	Torus* torus = new Torus(glm::vec3(-5, 0, -40), 9.0f, 3.0f);
+	Torus* torus = new Torus(glm::vec3(25, 0, -100), 9.0f, 3.0f);
 	// torus->translate(glm::vec3(-5, 0, -80)); // Move to position
-	torus->rotate(30.0f, glm::vec3(0, 1, 0)); // Rotate around Y
+	torus->rotate(-55.0f, glm::vec3(0, 1, 0)); // Rotate around Y
 	// torus->rotate(15.0f, glm::vec3(1, 0, 0)); // Additional rotation around X
 	torus->setColor(glm::vec3(0.8, 0.2, 0.2));  // Reddish colo
 	torus->setSpecularity(true);
