@@ -422,7 +422,7 @@ void initialize() {
     sceneObjects.push_back(sphereRefract);
 
     Cylinder* cylinder2 = new Cylinder(glm::vec3(18,-22.5,-75), 6.0, 8.0, glm::vec3(0.0, 0.8, 0.5), true );
-    cylinder2->setColor(glm::vec3(0.6,1,0.6));
+    cylinder2->setColor(glm::vec3(0.4,0,0.4));
     sceneObjects.push_back(cylinder2);
 
     // Blue sphere (in the middle of the torus)
@@ -447,7 +447,7 @@ void initialize() {
 
     Torus* torus2 = new Torus(glm::vec3(-25, 0, -100), 9.0f, 3.0f);
     torus2->rotate(55.0f, glm::vec3(0, 1, 0));
-    torus2->setColor(glm::vec3(0.8, 0.2, 0.2));
+    torus2->setColor(glm::vec3(0.2, 0.8, 0.2));
     torus2->setSpecularity(true);
     torus2->setShininess(50.0f);
     torus2->setReflectivity(true, 0.3f);
@@ -461,7 +461,7 @@ void initialize() {
 
     Sphere* flat2 = new Sphere(glm::vec3(-25,-75,-100), 12.0f);
     flat2->scale(glm::vec3(1.0f, 0.2f, 1.0f));
-    flat2->setColor(glm::vec3(0.8,0.2,0.6));
+    flat2->setColor(glm::vec3(0.2,0.8,0.4));
     sceneObjects.push_back(flat2);
 }
 int main(int argc, char *argv[]) {
