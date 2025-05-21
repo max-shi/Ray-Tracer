@@ -429,7 +429,7 @@ void initialize() {
     sceneObjects.push_back(flat);
     
     // Cylinder with caps
-    Cylinder* cylinder = new Cylinder(glm::vec3(0, -22.5, -70), 6.0, 20.0, glm::vec3(0.0, 0.8, 0.5), true);
+    Cylinder* cylinder = new Cylinder(glm::vec3(4, -22.5, -110), 6.0, 15.0, glm::vec3(0.0, 0.8, 0.5), true);
     cylinder->setSpecularity(true);
     cylinder->setShininess(50.0);
     sceneObjects.push_back(cylinder);
