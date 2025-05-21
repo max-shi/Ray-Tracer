@@ -288,7 +288,7 @@ void initialize() {
     sceneObjects.push_back(ceiling);
 
     // Big Sphere on the Left
-    Sphere *sphereBig = new Sphere(glm::vec3(-13,0,-88), 80.0);
+    Sphere *sphereBig = new Sphere(glm::vec3(-13,0,-88), 10.0);
     sphereBig->setColor(glm::vec3(1, 0.5, 1));
     sphereBig->setSpecularity(true);
     sphereBig->setReflectivity(true, 0.1);
@@ -296,7 +296,7 @@ void initialize() {
 
 
     // Transparent Sphere
-    Sphere *sphere1 = new Sphere(glm::vec3(-12, 0, -50), 3.0);
+    Sphere *sphere1 = new Sphere(glm::vec3(12, -5, -50), 3.0);
     sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
     sphere1->setReflectivity(true, 0.1);
     // sphere1->setRefractivity(true);
