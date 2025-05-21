@@ -391,19 +391,28 @@ void initialize() {
     sceneObjects.push_back(ceiling);
 
     // Big Sphere on the Left
-    Sphere *sphereBig = new Sphere(glm::vec3(-25,0,-110), 6.0);
+    Sphere *sphereBig = new Sphere(glm::vec3(0,0,-140), 6.0);
     sphereBig->setColor(glm::vec3(1, 0.5, 1));
     sphereBig->setSpecularity(true);
     sphereBig->setReflectivity(true, 0.1);
     sceneObjects.push_back(sphereBig);
 
 
+    Cylinder* cylinder = new Cylinder(glm::vec3(0, -22.5, -140), 6.0, 17.0, glm::vec3(0.0, 0.8, 0.5), true);
+    cylinder->setColor(glm::vec3(1,1,1));
+    cylinder->setTexture(&cylinderTexture);
+    sceneObjects.push_back(cylinder);
+
     // Transparent Sphere
-    // Sphere *sphere1 = new Sphere(glm::vec3(12, -5, -50), 3.0);
-    // sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
-    // sphere1->setReflectivity(true, 0.1);
-    // sphere1->setTransparency(true, 0.7);
-    // sceneObjects.push_back(sphere1);
+    Sphere *sphere1 = new Sphere(glm::vec3(-18, -9, -75), 6.0);
+    sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
+    sphere1->setReflectivity(true, 0.1);
+    sphere1->setTransparency(true, 0.7);
+    sceneObjects.push_back(sphere1);
+
+    Cylinder* cylinder3 = new Cylinder(glm::vec3(-18,-22.5,-75), 6.0, 8.0, glm::vec3(0.0, 0.8, 0.5), true );
+    cylinder3->setColor(glm::vec3(0.6,1,0.6));
+    sceneObjects.push_back(cylinder3);
 
     // Refractive Sphere
     Sphere *sphereRefract = new Sphere(glm::vec3(18, -9, -75), 6.0);
@@ -412,12 +421,20 @@ void initialize() {
     sphereRefract->setReflectivity(true, 0.2);
     sceneObjects.push_back(sphereRefract);
 
+    Cylinder* cylinder2 = new Cylinder(glm::vec3(18,-22.5,-75), 6.0, 8.0, glm::vec3(0.0, 0.8, 0.5), true );
+    cylinder2->setColor(glm::vec3(0.6,1,0.6));
+    sceneObjects.push_back(cylinder2);
 
     // Blue sphere (in the middle of the torus)
     Sphere *sphere3 = new Sphere(glm::vec3(25, 0, -100), 4.0);
     sphere3->setColor(glm::vec3(0, 1, 1));
     sphere3->setReflectivity(true, 0.8);
     sceneObjects.push_back(sphere3);
+
+    Sphere *sphere4 = new Sphere(glm::vec3(-25, 0, -100), 4.0);
+    sphere4->setColor(glm::vec3(0, 1, 1));
+    sphere4->setReflectivity(true, 0.8);
+    sceneObjects.push_back(sphere4);
 
     // Torus
     Torus* torus = new Torus(glm::vec3(25, 0, -100), 9.0f, 3.0f);
@@ -428,21 +445,24 @@ void initialize() {
     torus->setReflectivity(true, 0.3f);
     sceneObjects.push_back(torus);
 
+    Torus* torus2 = new Torus(glm::vec3(-25, 0, -100), 9.0f, 3.0f);
+    torus2->rotate(55.0f, glm::vec3(0, 1, 0));
+    torus2->setColor(glm::vec3(0.8, 0.2, 0.2));
+    torus2->setSpecularity(true);
+    torus2->setShininess(50.0f);
+    torus2->setReflectivity(true, 0.3f);
+    sceneObjects.push_back(torus2);
+
     // Flat pink sphere
     Sphere* flat = new Sphere(glm::vec3(25,-75,-100), 12.0f);
     flat->scale(glm::vec3(1.0f, 0.2f, 1.0f));
     flat->setColor(glm::vec3(0.8,0.2,0.6));
     sceneObjects.push_back(flat);
-    
-    // Cylinder with caps and texture
-    Cylinder* cylinder = new Cylinder(glm::vec3(-25, -22.5, -110), 6.0, 17.0, glm::vec3(0.0, 0.8, 0.5), true);
-    cylinder->setColor(glm::vec3(1,1,1));
-    cylinder->setTexture(&cylinderTexture);
-    sceneObjects.push_back(cylinder);
 
-    Cylinder* cylinder2 = new Cylinder(glm::vec3(18,-22.5,-75), 6.0, 8.0, glm::vec3(0.0, 0.8, 0.5), true );
-    cylinder2->setColor(glm::vec3(0.6,1,0.6));
-    sceneObjects.push_back(cylinder2);
+    Sphere* flat2 = new Sphere(glm::vec3(-25,-75,-100), 12.0f);
+    flat2->scale(glm::vec3(1.0f, 0.2f, 1.0f));
+    flat2->setColor(glm::vec3(0.8,0.2,0.6));
+    sceneObjects.push_back(flat2);
 }
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
