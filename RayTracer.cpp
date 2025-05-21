@@ -17,6 +17,8 @@
 #include <GL/freeglut.h>
 #include "TextureBMP.h"
 #include "Torus.h"
+#include <random>
+#include <chrono>
 using namespace std;
 
 TextureBMP texture;
@@ -30,6 +32,19 @@ const float YMAX = 20.0;
 bool antiAliasingEnabled = true;
 const int MAX_ADAPTIVE_DEPTH = 1;
 float colorThreshold = 0.1f;
+
+// Stochastic sampling parameters
+bool stochasticSamplingEnabled = true;
+int samplesPerPixel = 4;  // Number of samples for stochastic effects
+float lightRadius = 3.0f;  // Radius of the area light for soft shadows
+// Disabled features
+float apertureSize = 0.0f; // Camera aperture size for depth of field (0 = disabled)
+float focalDistance = 80.0f; // Distance to the focal plane (not used when aperture is 0)
+float roughness = 0.0f;    // Roughness for reflections (0 = disabled)
+
+// Random number generator for stochastic sampling
+std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
 vector<SceneObject*> sceneObjects;
 
@@ -61,14 +76,63 @@ glm::vec3 trace(Ray ray, int step) {
     float lightDist = glm::length(LightVec);
     float attenuation = 1.0f / (1.0f + 0.0008f * lightDist + 0.0004f * lightDist * lightDist);
     float lightIntensity = 1.2f;
-    color = obj->lighting(lightPos, -ray.dir, ray.hit) * attenuation * lightIntensity;
-    color += ambientLight * obj->getColor();
-
-    Ray shadowRay(ray.hit, LightVec);
-    shadowRay.closestPt(sceneObjects);
-    if (shadowRay.index > -1 && shadowRay.dist < lightDist) {
-        color = ambientLight * obj->getColor();
+    
+    if (stochasticSamplingEnabled) {
+        // Soft shadows with area light sampling
+        glm::vec3 lightDir = glm::normalize(LightVec);
+        glm::vec3 u = glm::normalize(glm::cross(lightDir, glm::vec3(0, 1, 0)));
+        if (glm::length(u) < 0.1f) u = glm::normalize(glm::cross(lightDir, glm::vec3(1, 0, 0)));
+        glm::vec3 v = glm::cross(u, lightDir);
+        
+        // Calculate lighting with soft shadows
+        glm::vec3 diffuseColor(0);
+        glm::vec3 specularColor(0);
+        int shadowCount = 0;
+        
+        for (int i = 0; i < samplesPerPixel; i++) {
+            // Generate random point on area light
+            float rx = (dist(rng) * 2.0f - 1.0f) * lightRadius;
+            float ry = (dist(rng) * 2.0f - 1.0f) * lightRadius;
+            glm::vec3 randomLightPos = lightPos + rx * u + ry * v;
+            
+            // Calculate lighting from this sample point
+            glm::vec3 sampleLightVec = randomLightPos - ray.hit;
+            float sampleLightDist = glm::length(sampleLightVec);
+            glm::vec3 sampleLightDir = glm::normalize(sampleLightVec);
+            
+            // Check if this light sample is visible (shadow ray)
+            Ray shadowRay(ray.hit, sampleLightVec);
+            shadowRay.closestPt(sceneObjects);
+            if (shadowRay.index > -1 && shadowRay.dist < sampleLightDist) {
+                shadowCount++;
+                continue;
+            }
+            
+            // Add contribution from this light sample
+            glm::vec3 sampleColor = obj->lighting(randomLightPos, -ray.dir, ray.hit);
+            diffuseColor += sampleColor;
+        }
+        
+        // Average the results
+        float shadowFactor = 1.0f - (float)shadowCount / (float)samplesPerPixel;
+        if (shadowFactor > 0) {
+            color = (diffuseColor / (float)samplesPerPixel) * attenuation * lightIntensity * shadowFactor;
+        } else {
+            color = glm::vec3(0);
+        }
+    } else {
+        // Standard hard shadows
+        color = obj->lighting(lightPos, -ray.dir, ray.hit) * attenuation * lightIntensity;
+        
+        Ray shadowRay(ray.hit, LightVec);
+        shadowRay.closestPt(sceneObjects);
+        if (shadowRay.index > -1 && shadowRay.dist < lightDist) {
+            color = glm::vec3(0);
+        }
     }
+    
+    // Add ambient light regardless of shadows
+    color += ambientLight * obj->getColor();
 
     if (obj->isTransparent() && step < MAX_STEPS) {
         float t = obj->getTransparencyCoeff();
@@ -107,6 +171,8 @@ glm::vec3 trace(Ray ray, int step) {
     if (obj->isReflective() && step < MAX_STEPS) {
         float rho = obj->getReflectionCoeff();
         glm::vec3 normalVec = obj->normal(ray.hit);
+        
+        // Standard perfect mirror reflection (rough reflections disabled)
         glm::vec3 reflectedDir = glm::reflect(ray.dir, normalVec);
         Ray reflectedRay(ray.hit, reflectedDir);
         glm::vec3 reflectedColor = trace(reflectedRay, step + 1);
@@ -172,6 +238,7 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
 }
 
 glm::vec3 calculatePixelColor(float xp, float yp, float cellX, float cellY, const glm::vec3& eye) {
+    // Depth of field disabled
     if (!antiAliasingEnabled) {
         glm::vec3 dir(xp + 0.5f * cellX, yp + 0.5f * cellY, -EDIST);
         Ray ray(eye, dir);
@@ -218,6 +285,11 @@ void keyboard(unsigned char key, int x, int y) {
         printf("Anti-aliasing %s\n", antiAliasingEnabled ? "ENABLED" : "DISABLED");
         glutPostRedisplay();
     }
+    else if (key == 's' || key == 'S') {
+        stochasticSamplingEnabled = !stochasticSamplingEnabled;
+        printf("Stochastic sampling %s\n", stochasticSamplingEnabled ? "ENABLED" : "DISABLED");
+        glutPostRedisplay();
+    }
     else if (key == '+') {
         colorThreshold += 0.02f;
         printf("Color threshold increased to %.2f\n", colorThreshold);
@@ -226,6 +298,29 @@ void keyboard(unsigned char key, int x, int y) {
     else if (key == '-') {
         colorThreshold = std::max(0.02f, colorThreshold - 0.02f);
         printf("Color threshold decreased to %.2f\n", colorThreshold);
+        glutPostRedisplay();
+    }
+    else if (key == 'l' || key == 'L') {
+        // Increase/decrease light radius for soft shadows
+        if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) {
+            lightRadius = std::max(0.5f, lightRadius - 0.5f);
+            printf("Light radius decreased to %.1f\n", lightRadius);
+        } else {
+            lightRadius += 0.5f;
+            printf("Light radius increased to %.1f\n", lightRadius);
+        }
+        glutPostRedisplay();
+    }
+    // Depth of field and roughness controls removed as these features are disabled
+    else if (key == 'n' || key == 'N') {
+        // Increase/decrease number of samples
+        if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) {
+            samplesPerPixel = std::max(4, samplesPerPixel / 2);
+            printf("Samples per pixel decreased to %d\n", samplesPerPixel);
+        } else {
+            samplesPerPixel = std::min(64, samplesPerPixel * 2);
+            printf("Samples per pixel increased to %d\n", samplesPerPixel);
+        }
         glutPostRedisplay();
     }
 }
