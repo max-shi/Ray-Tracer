@@ -23,6 +23,7 @@
 using namespace std;
 
 TextureBMP texture;
+TextureBMP cylinderTexture("../fabric-pattern-polyhaven.bmp");
 const float EDIST = 40;
 const int NUMDIV = 500;
 const int MAX_STEPS = 10;
@@ -70,6 +71,12 @@ glm::vec3 trace(Ray ray, int step) {
         } else {
             color = glm::vec3(0, 0, 0);
         }
+        obj->setColor(color);
+    }
+    
+    Cylinder* cylinderObj = dynamic_cast<Cylinder*>(obj);
+    if (cylinderObj != nullptr) {
+        color = cylinderObj->getColorAt(ray.hit);
         obj->setColor(color);
     }
 
@@ -384,7 +391,7 @@ void initialize() {
     sceneObjects.push_back(ceiling);
 
     // Big Sphere on the Left
-    Sphere *sphereBig = new Sphere(glm::vec3(-13,0,-88), 10.0);
+    Sphere *sphereBig = new Sphere(glm::vec3(-25,0,-110), 6.0);
     sphereBig->setColor(glm::vec3(1, 0.5, 1));
     sphereBig->setSpecularity(true);
     sphereBig->setReflectivity(true, 0.1);
@@ -392,18 +399,17 @@ void initialize() {
 
 
     // Transparent Sphere
-    Sphere *sphere1 = new Sphere(glm::vec3(12, -5, -50), 3.0);
-    sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
-    sphere1->setReflectivity(true, 0.1);
-    // sphere1->setRefractivity(true);
-    sphere1->setTransparency(true, 0.7);
-    sceneObjects.push_back(sphere1);
+    // Sphere *sphere1 = new Sphere(glm::vec3(12, -5, -50), 3.0);
+    // sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
+    // sphere1->setReflectivity(true, 0.1);
+    // sphere1->setTransparency(true, 0.7);
+    // sceneObjects.push_back(sphere1);
 
     // Refractive Sphere
-    Sphere *sphereRefract = new Sphere(glm::vec3(-6, 0, -50), 3.0);
-    sphereRefract->setColor(glm::vec3(0.7, 0.7, 0.7));
-    // sphereRefract->setReflectivity(true, 0.1);
-    sphereRefract->setRefractivity(true, 0.8, 1.5);
+    Sphere *sphereRefract = new Sphere(glm::vec3(18, -9, -75), 6.0);
+    sphereRefract->setColor(glm::vec3(0.2, 1, 0.2));
+    sphereRefract->setRefractivity(true, 1, 1.02);
+    sphereRefract->setReflectivity(true, 0.2);
     sceneObjects.push_back(sphereRefract);
 
 
@@ -428,13 +434,16 @@ void initialize() {
     flat->setColor(glm::vec3(0.8,0.2,0.6));
     sceneObjects.push_back(flat);
     
-    // Cylinder with caps
-    Cylinder* cylinder = new Cylinder(glm::vec3(4, -22.5, -110), 6.0, 15.0, glm::vec3(0.0, 0.8, 0.5), true);
-    cylinder->setSpecularity(true);
-    cylinder->setShininess(50.0);
+    // Cylinder with caps and texture
+    Cylinder* cylinder = new Cylinder(glm::vec3(-25, -22.5, -110), 6.0, 17.0, glm::vec3(0.0, 0.8, 0.5), true);
+    cylinder->setColor(glm::vec3(1,1,1));
+    cylinder->setTexture(&cylinderTexture);
     sceneObjects.push_back(cylinder);
-}
 
+    Cylinder* cylinder2 = new Cylinder(glm::vec3(18,-22.5,-75), 6.0, 8.0, glm::vec3(0.0, 0.8, 0.5), true );
+    cylinder2->setColor(glm::vec3(0.6,1,0.6));
+    sceneObjects.push_back(cylinder2);
+}
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB );

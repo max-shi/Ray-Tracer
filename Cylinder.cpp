@@ -97,3 +97,45 @@ glm::vec3 Cylinder::normal(glm::vec3 p) {
     glm::vec3 n(p.x - center.x, 0, p.z - center.z);
     return glm::normalize(n);
 }
+
+/**
+* Calculate texture coordinates for a point on the cylinder
+* s = angle around the cylinder (0 to 1)
+* t = height along the cylinder (0 to 1)
+*/
+glm::vec2 Cylinder::getTexCoord(glm::vec3 p) {
+    // For points on the cylindrical surface
+    float s, t;
+    
+    // Calculate the angle around the cylinder (for s coordinate)
+    float dx = p.x - center.x;
+    float dz = p.z - center.z;
+    float angle = atan2(dz, dx);
+    
+    // Convert angle to [0,1] range for s coordinate
+    s = angle / (2.0f * M_PI);
+    if (s < 0) s += 1.0f;  // Ensure s is in [0,1]
+    
+    // Calculate t coordinate based on height
+    t = (p.y - center.y) / height;
+    
+    // Ensure t is in [0,1] range
+    t = glm::clamp(t, 0.0f, 1.0f);
+    
+    return glm::vec2(s, t);
+}
+
+/**
+* Get color at a point on the cylinder (either from texture or material color)
+*/
+glm::vec3 Cylinder::getColorAt(glm::vec3 p) {
+    if (!isTextured_ || texture_ == nullptr) {
+        return color_; // Return the material color if not textured
+    }
+    
+    // Get texture coordinates
+    glm::vec2 texCoord = getTexCoord(p);
+    
+    // Get color from texture
+    return texture_->getColorAt(texCoord.x, texCoord.y);
+}
