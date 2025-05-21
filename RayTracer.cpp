@@ -21,7 +21,7 @@ using namespace std;
 
 TextureBMP texture;
 const float EDIST = 40;
-const int NUMDIV = 300;
+const int NUMDIV = 500;
 const int MAX_STEPS = 2;
 const float XMIN = -20.0;
 const float XMAX = 20.0;
@@ -72,9 +72,16 @@ glm::vec3 trace(Ray ray, int step) {
 
     if (obj->isTransparent() && step < MAX_STEPS) {
         float tran = obj->getTransparencyCoeff();
+        
+        // Create a new ray that continues through the object
+        // The Ray constructor already has ray stepping built in (RSTEP = 0.005f)
         Ray transparentRay(ray.hit, ray.dir);
+        
+        // Find the next object this ray hits
         transparentRay.closestPt(sceneObjects);
-        if (transparentRay.index > -1) {
+        
+        // If it hits something, blend the colors based on transparency coefficient
+        if (transparentRay.index > -1 && transparentRay.index != ray.index) {
             glm::vec3 transparentColor = trace(transparentRay, step + 1);
             color = (1.0f - tran) * color + tran * transparentColor;
         }
@@ -211,6 +218,9 @@ void initialize() {
     gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
     glClearColor(0, 0, 0, 1);
 
+    // Bounding Box
+
+    // Checkered Floor
     Plane *floor = new Plane(glm::vec3(-45, -22.5, 0),
                              glm::vec3(45, -22.5, 0),
                              glm::vec3(45, -22.5, -160),
@@ -260,17 +270,28 @@ void initialize() {
     ceiling->setSpecularity(false);
     sceneObjects.push_back(ceiling);
 
-    Sphere *sphere1 = new Sphere(glm::vec3(-10, 0, -100), 3.0);
+    // Big Sphere on the Left
+    Sphere *sphereBig = new Sphere(glm::vec3(-12,0,-85), 10.0);
+    sphereBig->setColor(glm::vec3(1, 1, 1));
+    sphereBig->setSpecularity(true);
+    sceneObjects.push_back(sphereBig);
+
+
+    // Transparent Sphere
+    Sphere *sphere1 = new Sphere(glm::vec3(15, 0, -50), 3.0);
     sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
-    sphere1->setReflectivity(true, 0.3);
-    sphere1->setTransparency(true, 0.7);
+    sphere1->setReflectivity(true, 0.1);
+    // sphere1->setRefractivity(true);
+    sphere1->setTransparency(true, 0.9);
     sceneObjects.push_back(sphere1);
 
+    // Blue sphere (in the middle of the torus)
     Sphere *sphere3 = new Sphere(glm::vec3(25, 0, -100), 4.0);
     sphere3->setColor(glm::vec3(0, 1, 1));
     sphere3->setReflectivity(true, 0.8);
     sceneObjects.push_back(sphere3);
 
+    // Torus
     Torus* torus = new Torus(glm::vec3(25, 0, -100), 9.0f, 3.0f);
     torus->rotate(-55.0f, glm::vec3(0, 1, 0));
     torus->setColor(glm::vec3(0.8, 0.2, 0.2));
@@ -279,6 +300,7 @@ void initialize() {
     torus->setReflectivity(true, 0.3f);
     sceneObjects.push_back(torus);
 
+    // Flat pink sphere
     Sphere* flat = new Sphere(glm::vec3(25,-75,-100), 12.0f);
     flat->scale(glm::vec3(1.0f, 0.2f, 1.0f));
     flat->setColor(glm::vec3(0.8,0.2,0.6));
@@ -288,7 +310,7 @@ void initialize() {
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB );
-	glutInitWindowSize(1000, 1000);
+	glutInitWindowSize(500, 500);
 	glutInitWindowPosition(20, 20);
 	glutCreateWindow("Raytracing");
 
