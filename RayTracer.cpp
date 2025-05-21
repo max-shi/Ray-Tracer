@@ -21,7 +21,7 @@ using namespace std;
 
 TextureBMP texture;
 const float EDIST = 40;
-const int NUMDIV = 250;
+const int NUMDIV = 500;
 const int MAX_STEPS = 10;
 const float XMIN = -20.0;
 const float XMAX = 20.0;
@@ -288,19 +288,28 @@ void initialize() {
     sceneObjects.push_back(ceiling);
 
     // Big Sphere on the Left
-    Sphere *sphereBig = new Sphere(glm::vec3(-12,0,-85), 10.0);
-    sphereBig->setColor(glm::vec3(1, 1, 1));
+    Sphere *sphereBig = new Sphere(glm::vec3(-13,0,-88), 80.0);
+    sphereBig->setColor(glm::vec3(1, 0.5, 1));
     sphereBig->setSpecularity(true);
+    sphereBig->setReflectivity(true, 0.1);
     sceneObjects.push_back(sphereBig);
 
 
     // Transparent Sphere
     Sphere *sphere1 = new Sphere(glm::vec3(-12, 0, -50), 3.0);
     sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
-    // sphere1->setReflectivity(true, 0.1);
+    sphere1->setReflectivity(true, 0.1);
     // sphere1->setRefractivity(true);
     sphere1->setTransparency(true, 0.7);
     sceneObjects.push_back(sphere1);
+
+    // Refractive Sphere
+    Sphere *sphereRefract = new Sphere(glm::vec3(-6, 0, -50), 3.0);
+    sphereRefract->setColor(glm::vec3(0.7, 0.7, 0.7));
+    // sphereRefract->setReflectivity(true, 0.1);
+    sphereRefract->setRefractivity(true, 0.8, 1.5);
+    sceneObjects.push_back(sphereRefract);
+
 
     // Blue sphere (in the middle of the torus)
     Sphere *sphere3 = new Sphere(glm::vec3(25, 0, -100), 4.0);
@@ -327,7 +336,7 @@ void initialize() {
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB );
-	glutInitWindowSize(500, 500);
+	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(20, 20);
 	glutCreateWindow("Raytracing");
 
