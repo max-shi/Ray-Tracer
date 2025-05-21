@@ -21,8 +21,8 @@ using namespace std;
 
 TextureBMP texture;
 const float EDIST = 40;
-const int NUMDIV = 500;
-const int MAX_STEPS = 2;
+const int NUMDIV = 250;
+const int MAX_STEPS = 10;
 const float XMIN = -20.0;
 const float XMAX = 20.0;
 const float YMIN = -20.0;
@@ -71,22 +71,39 @@ glm::vec3 trace(Ray ray, int step) {
     }
 
     if (obj->isTransparent() && step < MAX_STEPS) {
-        float tran = obj->getTransparencyCoeff();
+        float t = obj->getTransparencyCoeff();
+        // Create a secondary ray along the direction of transmission of light
+        Ray transmissionRay(ray.hit, ray.dir);
+        glm::vec3 transmittedColor = trace(transmissionRay, step + 1);
+        // Add the scaled transmitted color to the pixel color (I = IA + t*IC)
+        color = color + (t * transmittedColor);
+    }
+    
+    // Handle refraction for refractive objects
+    if (obj->isRefractive() && step < MAX_STEPS) {
+        const float ETA = obj->getRefractiveIndex(); // Refractive index
+        float transVal = obj->getRefractionCoeff(); // Refraction coefficient
+        glm::vec3 normalVec = obj->normal(ray.hit);
         
-        // Create a new ray that continues through the object
-        // The Ray constructor already has ray stepping built in (RSTEP = 0.005f)
-        Ray transparentRay(ray.hit, ray.dir);
+        // First refraction (entering the object)
+        glm::vec3 refractedDir = glm::refract(ray.dir, normalVec, 1.0f/ETA);
+        Ray refractedRay(ray.hit, refractedDir);
+        refractedRay.closestPt(sceneObjects);
         
-        // Find the next object this ray hits
-        transparentRay.closestPt(sceneObjects);
-        
-        // If it hits something, blend the colors based on transparency coefficient
-        if (transparentRay.index > -1 && transparentRay.index != ray.index) {
-            glm::vec3 transparentColor = trace(transparentRay, step + 1);
-            color = (1.0f - tran) * color + tran * transparentColor;
+        if (refractedRay.index != -1) {
+            // Second refraction (exiting the object)
+            glm::vec3 exitNormal = -sceneObjects[refractedRay.index]->normal(refractedRay.hit);
+            glm::vec3 exitDir = glm::refract(refractedDir, exitNormal, ETA);
+            Ray exitRay(refractedRay.hit, exitDir);
+            
+            glm::vec3 refractedColor = trace(exitRay, step + 1);
+            
+            // Blend original color with refracted color based on refraction coefficient
+            color = color * (1.0f - transVal) + refractedColor * transVal;
         }
     }
-
+    
+    // Handle reflections
     if (obj->isReflective() && step < MAX_STEPS) {
         float rho = obj->getReflectionCoeff();
         glm::vec3 normalVec = obj->normal(ray.hit);
@@ -278,11 +295,11 @@ void initialize() {
 
 
     // Transparent Sphere
-    Sphere *sphere1 = new Sphere(glm::vec3(15, 0, -50), 3.0);
+    Sphere *sphere1 = new Sphere(glm::vec3(-12, 0, -50), 3.0);
     sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
-    sphere1->setReflectivity(true, 0.1);
+    // sphere1->setReflectivity(true, 0.1);
     // sphere1->setRefractivity(true);
-    sphere1->setTransparency(true, 0.9);
+    sphere1->setTransparency(true, 0.7);
     sceneObjects.push_back(sphere1);
 
     // Blue sphere (in the middle of the torus)
