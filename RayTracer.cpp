@@ -17,6 +17,7 @@
 #include <GL/freeglut.h>
 #include "TextureBMP.h"
 #include "Torus.h"
+#include "Cylinder.h"
 #include <random>
 #include <chrono>
 using namespace std;
@@ -29,12 +30,12 @@ const float XMIN = -20.0;
 const float XMAX = 20.0;
 const float YMIN = -20.0;
 const float YMAX = 20.0;
-bool antiAliasingEnabled = true;
+bool antiAliasingEnabled = false;
 const int MAX_ADAPTIVE_DEPTH = 1;
 float colorThreshold = 0.1f;
 
 // Stochastic sampling parameters
-bool stochasticSamplingEnabled = true;
+bool stochasticSamplingEnabled = false;
 int samplesPerPixel = 4;  // Number of samples for stochastic effects
 float lightRadius = 3.0f;  // Radius of the area light for soft shadows
 // Disabled features
@@ -426,6 +427,12 @@ void initialize() {
     flat->scale(glm::vec3(1.0f, 0.2f, 1.0f));
     flat->setColor(glm::vec3(0.8,0.2,0.6));
     sceneObjects.push_back(flat);
+    
+    // Cylinder with caps
+    Cylinder* cylinder = new Cylinder(glm::vec3(0, -22.5, -70), 6.0, 20.0, glm::vec3(0.0, 0.8, 0.5), true);
+    cylinder->setSpecularity(true);
+    cylinder->setShininess(50.0);
+    sceneObjects.push_back(cylinder);
 }
 
 int main(int argc, char *argv[]) {
