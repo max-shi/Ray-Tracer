@@ -2,8 +2,7 @@
 * COSC 363  Computer Graphics
 * Department of Computer Science and Software Engineering, University of Canterbury.
 *
-* A basic ray tracer
-* See Lab07.pdf   for details.
+* Ray Tracer for Cosc363 Assignment 2 (msh254)
 *===================================================================================
 */
 #include <iostream>
@@ -24,33 +23,29 @@ using namespace std;
 
 TextureBMP texture;
 TextureBMP cylinderTexture("../fabric-pattern-polyhaven.bmp");
-const float EDIST = 40;
+
+// These below parameters affect the speed at which the ray tracer loads
 const int NUMDIV = 500;
 const int MAX_STEPS = 10;
+bool antiAliasingEnabled = true;
+bool stochasticSamplingEnabled = true;
+int SAMPLES_PER_PIXEL = 4;
+
+const float EDIST = 40;
 const float XMIN = -20.0;
 const float XMAX = 20.0;
 const float YMIN = -20.0;
 const float YMAX = 20.0;
-bool antiAliasingEnabled = false;
 const int MAX_ADAPTIVE_DEPTH = 1;
-float colorThreshold = 0.1f;
-
-// Stochastic sampling parameters
-bool stochasticSamplingEnabled = false;
-int samplesPerPixel = 4;  // Number of samples for stochastic effects
-float lightRadius = 3.0f;  // Radius of the area light for soft shadows
-// Disabled features
-float apertureSize = 0.0f; // Camera aperture size for depth of field (0 = disabled)
-float focalDistance = 80.0f; // Distance to the focal plane (not used when aperture is 0)
-float roughness = 0.0f;    // Roughness for reflections (0 = disabled)
+float COLOR_THRESHOLD = 0.1f;
+float LIGHT_RADIUS = 3.0f;  // Radius of the area light for soft shadows
 
 // Random number generator for stochastic sampling
 std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-
 vector<SceneObject*> sceneObjects;
 
-//---The most important function in a ray tracer! ----------------------------------
+//-------------------- Trace Function --------------------------
 glm::vec3 trace(Ray ray, int step) {
     glm::vec3 backgroundCol(0);
     glm::vec3 lightPos(0, 40, -90);
@@ -84,7 +79,7 @@ glm::vec3 trace(Ray ray, int step) {
     float lightDist = glm::length(LightVec);
     float attenuation = 1.0f / (1.0f + 0.0008f * lightDist + 0.0004f * lightDist * lightDist);
     float lightIntensity = 1.2f;
-    
+    //-------------------- Stochastic Sampling --------------------------
     if (stochasticSamplingEnabled) {
         // Soft shadows with area light sampling
         glm::vec3 lightDir = glm::normalize(LightVec);
@@ -97,10 +92,10 @@ glm::vec3 trace(Ray ray, int step) {
         glm::vec3 specularColor(0);
         int shadowCount = 0;
         
-        for (int i = 0; i < samplesPerPixel; i++) {
+        for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {
             // Generate random point on area light
-            float rx = (dist(rng) * 2.0f - 1.0f) * lightRadius;
-            float ry = (dist(rng) * 2.0f - 1.0f) * lightRadius;
+            float rx = (dist(rng) * 2.0f - 1.0f) * LIGHT_RADIUS;
+            float ry = (dist(rng) * 2.0f - 1.0f) * LIGHT_RADIUS;
             glm::vec3 randomLightPos = lightPos + rx * u + ry * v;
             
             // Calculate lighting from this sample point
@@ -122,14 +117,14 @@ glm::vec3 trace(Ray ray, int step) {
         }
         
         // Average the results
-        float shadowFactor = 1.0f - (float)shadowCount / (float)samplesPerPixel;
+        float shadowFactor = 1.0f - (float)shadowCount / (float)SAMPLES_PER_PIXEL;
         if (shadowFactor > 0) {
-            color = (diffuseColor / (float)samplesPerPixel) * attenuation * lightIntensity * shadowFactor;
+            color = (diffuseColor / (float)SAMPLES_PER_PIXEL) * attenuation * lightIntensity * shadowFactor;
         } else {
             color = glm::vec3(0);
         }
     } else {
-        // Standard hard shadows
+    //-------------------- Non Stochastic Sampling --------------------------
         color = obj->lighting(lightPos, -ray.dir, ray.hit) * attenuation * lightIntensity;
         
         Ray shadowRay(ray.hit, LightVec);
@@ -138,10 +133,10 @@ glm::vec3 trace(Ray ray, int step) {
             color = glm::vec3(0);
         }
     }
-    
-    // Add ambient light regardless of shadows
+    //-------------------- Ambient light Calculations --------------------------
     color += ambientLight * obj->getColor();
 
+    //-------------------- Transparency Ray + Calculations --------------------------
     if (obj->isTransparent() && step < MAX_STEPS) {
         float t = obj->getTransparencyCoeff();
         // Create a secondary ray along the direction of transmission of light
@@ -151,7 +146,7 @@ glm::vec3 trace(Ray ray, int step) {
         color = color + (t * transmittedColor);
     }
     
-    // Handle refraction for refractive objects
+    //-------------------- Refractive Ray + Calculations --------------------------
     if (obj->isRefractive() && step < MAX_STEPS) {
         const float ETA = obj->getRefractiveIndex(); // Refractive index
         float transVal = obj->getRefractionCoeff(); // Refraction coefficient
@@ -174,13 +169,14 @@ glm::vec3 trace(Ray ray, int step) {
             color = color * (1.0f - transVal) + refractedColor * transVal;
         }
     }
-    
-    // Handle reflections
+
+    //-------------------- Reflective Ray + Calculations --------------------------
     if (obj->isReflective() && step < MAX_STEPS) {
         float rho = obj->getReflectionCoeff();
         glm::vec3 normalVec = obj->normal(ray.hit);
         
-        // Standard perfect mirror reflection (rough reflections disabled)
+        // Standard perfect mirror reflection
+        // TODO rough reflections?
         glm::vec3 reflectedDir = glm::reflect(ray.dir, normalVec);
         Ray reflectedRay(ray.hit, reflectedDir);
         glm::vec3 reflectedColor = trace(reflectedRay, step + 1);
@@ -191,10 +187,9 @@ glm::vec3 trace(Ray ray, int step) {
     return color;
 }
 
-// Helper function for adaptive sampling
 bool needsSubdivision(const glm::vec3& col1, const glm::vec3& col2) {
     float diff = glm::length(col1 - col2);
-    return diff > colorThreshold;
+    return diff > COLOR_THRESHOLD;
 }
 
 // Recursive adaptive sampling function
@@ -299,23 +294,23 @@ void keyboard(unsigned char key, int x, int y) {
         glutPostRedisplay();
     }
     else if (key == '+') {
-        colorThreshold += 0.02f;
-        printf("Color threshold increased to %.2f\n", colorThreshold);
+        COLOR_THRESHOLD += 0.02f;
+        printf("Color threshold increased to %.2f\n", COLOR_THRESHOLD);
         glutPostRedisplay();
     }
     else if (key == '-') {
-        colorThreshold = std::max(0.02f, colorThreshold - 0.02f);
-        printf("Color threshold decreased to %.2f\n", colorThreshold);
+        COLOR_THRESHOLD = std::max(0.02f, COLOR_THRESHOLD - 0.02f);
+        printf("Color threshold decreased to %.2f\n", COLOR_THRESHOLD);
         glutPostRedisplay();
     }
     else if (key == 'l' || key == 'L') {
         // Increase/decrease light radius for soft shadows
         if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) {
-            lightRadius = std::max(0.5f, lightRadius - 0.5f);
-            printf("Light radius decreased to %.1f\n", lightRadius);
+            LIGHT_RADIUS = std::max(0.5f, LIGHT_RADIUS - 0.5f);
+            printf("Light radius decreased to %.1f\n", LIGHT_RADIUS);
         } else {
-            lightRadius += 0.5f;
-            printf("Light radius increased to %.1f\n", lightRadius);
+            LIGHT_RADIUS += 0.5f;
+            printf("Light radius increased to %.1f\n", LIGHT_RADIUS);
         }
         glutPostRedisplay();
     }
@@ -323,11 +318,11 @@ void keyboard(unsigned char key, int x, int y) {
     else if (key == 'n' || key == 'N') {
         // Increase/decrease number of samples
         if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) {
-            samplesPerPixel = std::max(4, samplesPerPixel / 2);
-            printf("Samples per pixel decreased to %d\n", samplesPerPixel);
+            SAMPLES_PER_PIXEL = std::max(4, SAMPLES_PER_PIXEL / 2);
+            printf("Samples per pixel decreased to %d\n", SAMPLES_PER_PIXEL);
         } else {
-            samplesPerPixel = std::min(64, samplesPerPixel * 2);
-            printf("Samples per pixel increased to %d\n", samplesPerPixel);
+            SAMPLES_PER_PIXEL = std::min(64, SAMPLES_PER_PIXEL * 2);
+            printf("Samples per pixel increased to %d\n", SAMPLES_PER_PIXEL);
         }
         glutPostRedisplay();
     }
