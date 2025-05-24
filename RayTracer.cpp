@@ -239,7 +239,7 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
     samples[2] = adaptiveSample(x, y + height/2, width/2, height/2, eye, maxDepth, currentDepth+1, parentColor);
     samples[3] = adaptiveSample(x + width/2, y + height/2, width/2, height/2, eye, maxDepth, currentDepth+1, parentColor);
 
-    // Check if subdivision is needed (using the uh helper funciton)
+    // Check if subdivision is needed : comparison with previous parentColor (this does not compare between samples -> only with the previous color)
     bool subdivide = false;
     if (currentDepth > 0) {
         for (int i = 0; i < 4; i++) {
@@ -254,6 +254,7 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
         // Average of samples
         return (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0f;
     } else {
+        // Check if subdivision is needed : comparison with samples
         bool similar = true;
         for (int i = 1; i < 4; i++) {
             if (needsSubdivision(samples[i], samples[0])) {
@@ -263,10 +264,14 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
         }
 
         if (similar) {
+            // if all similar, average the colors
             return (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0f;
         } else if (currentDepth < maxDepth-1) {
+            // if NOT all similar, recurse again
+            // FIXME: currently max adaptive depth is set to 1 meaning this actually will NEVER get called.
             return adaptiveSample(x, y, width, height, eye, maxDepth, currentDepth+1, samples[0]);
         } else {
+            // this is the case where we reach the maxDepth (then we just take the average) -> no recursion
             return (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0f;
         }
     }
