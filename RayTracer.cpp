@@ -1,7 +1,5 @@
 /*==================================================================================
 * COSC 363  Computer Graphics
-* Department of Computer Science and Software Engineering, University of Canterbury.
-*
 * Ray Tracer for Cosc363 Assignment 2 (msh254)
 *===================================================================================
 */
