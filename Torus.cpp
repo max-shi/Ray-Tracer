@@ -155,6 +155,7 @@ vector<float> Torus::solveQuartic(const vector<double>& coeffs) const {
     const double tolerance = 1e-6;
 
     // Initial guesses - equally spaced around the unit circle
+    // TODO : are these ideal?
     complex<double> roots[4] = {
         complex<double>(0.4, 0.9),
         complex<double>(-0.9, 0.4),
@@ -165,8 +166,10 @@ vector<float> Torus::solveQuartic(const vector<double>& coeffs) const {
     // Durand-Kerner iteration
     for (int iter = 0; iter < maxIterations; ++iter) {
         complex<double> newRoots[4];
+        // start with conversion assumed
         bool converged = true;
 
+        // If in here, any time the convergence is false, then we break (at the bottom).
         for (int i = 0; i < 4; ++i) {
             complex<double> numerator =
                 coeffs[0] * roots[i] * roots[i] * roots[i] * roots[i] +
@@ -185,6 +188,7 @@ vector<float> Torus::solveQuartic(const vector<double>& coeffs) const {
             newRoots[i] = roots[i] - (numerator / denominator);
 
             if (abs(newRoots[i] - roots[i]) > tolerance) {
+                // if the val between the root and new root is greater than the tolerance, we set converged to false (and we run the alg. again)
                 converged = false;
             }
         }
