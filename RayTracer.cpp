@@ -208,12 +208,22 @@ glm::vec3 trace(Ray ray, int step) {
     return color;
 }
 
+/**-------------------- Helper Function For Adaptive Sampling --------------------------
+ * Determines if two colors are sufficiently different to require subdivision in adaptive sampling.
+ * This function calculates the distance between two color vectors and compares
+ * it with the COLOR_THRESHOLD to decide if further sampling is needed.
+ */
 bool needsSubdivision(const glm::vec3& col1, const glm::vec3& col2) {
     float diff = glm::length(col1 - col2);
     return diff > COLOR_THRESHOLD;
 }
 
-// Recursive adaptive sampling function
+/**-------------------- Adaptive Sampling --------------------------
+ * Recursively samples a pixel region using adaptive subdivision for anti-aliasing.
+ * This function implements adaptive supersampling by recursively subdividing pixel regions
+ * where color variation is high. It samples four sub-regions of the current region and
+ * determines whether further subdivision is needed based on color differences.
+ */
 glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm::vec3& eye,
                          int maxDepth, int currentDepth, const glm::vec3& parentColor) {
     if (currentDepth >= maxDepth) {
@@ -229,7 +239,7 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
     samples[2] = adaptiveSample(x, y + height/2, width/2, height/2, eye, maxDepth, currentDepth+1, parentColor);
     samples[3] = adaptiveSample(x + width/2, y + height/2, width/2, height/2, eye, maxDepth, currentDepth+1, parentColor);
 
-    // Check if subdivision is needed
+    // Check if subdivision is needed (using the uh helper funciton)
     bool subdivide = false;
     if (currentDepth > 0) {
         for (int i = 0; i < 4; i++) {
@@ -241,6 +251,7 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
     }
 
     if (subdivide && currentDepth < maxDepth-1) {
+        // Average of samples
         return (samples[0] + samples[1] + samples[2] + samples[3]) / 4.0f;
     } else {
         bool similar = true;
