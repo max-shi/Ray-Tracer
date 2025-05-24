@@ -30,7 +30,6 @@ const int MAX_STEPS = 10;
 bool antiAliasingEnabled = true;
 bool stochasticSamplingEnabled = true;
 int SAMPLES_PER_PIXEL = 4;
-
 const float EDIST = 40;
 const float XMIN = -20.0;
 const float XMAX = 20.0;
@@ -54,9 +53,11 @@ glm::vec3 trace(Ray ray, int step) {
     SceneObject* obj;
 
     ray.closestPt(sceneObjects);
+    // The below line should never be actually called as we have a bounding box, but good for a check i guess..
     if(ray.index == -1) return backgroundCol;
     obj = sceneObjects[ray.index];
-
+    
+    // Checkered floor computations. As the floor is the first object in the scene, we can check for it with ray.index == 0
     if (ray.index == 0) {
         int squareSize = 10;
         int ix = floor(ray.hit.x / squareSize);
@@ -69,6 +70,7 @@ glm::vec3 trace(Ray ray, int step) {
         obj->setColor(color);
     }
     
+    // Method only for cylinder, as it has a texture mapped to it
     Cylinder* cylinderObj = dynamic_cast<Cylinder*>(obj);
     if (cylinderObj != nullptr) {
         color = cylinderObj->getColorAt(ray.hit);
@@ -77,6 +79,14 @@ glm::vec3 trace(Ray ray, int step) {
 
     glm::vec3 LightVec = lightPos - ray.hit;
     float lightDist = glm::length(LightVec);
+
+    /* see this https://learnwebgl.brown37.net/09_lights/lights_attenuation.html#:~:text=In%20the%20physical%20world%20the,be%20proportional%20to%201%2Fd.
+     * Main points : in real life light attenuation is 1/d^2 : d being distance
+     * However this causes light dropoff very fast, which is why it is common to  use 1/d, but in context of a ray tracer
+     *  " In the original OpenGL lighting model, the equation 1.0/(c1 + c2*d + c3*d^2) was used to give programmers control over attenuation. " (from source)
+     * hence the attenuation.
+     */
+
     float attenuation = 1.0f / (1.0f + 0.0008f * lightDist + 0.0004f * lightDist * lightDist);
     float lightIntensity = 1.2f;
     //-------------------- Stochastic Sampling --------------------------
@@ -336,6 +346,7 @@ void initialize() {
     // Bounding Box
 
     // Checkered Floor
+    // This MUST be first, as we check for intersection with it first (and then set the checkered pattern).
     Plane *floor = new Plane(glm::vec3(-45, -22.5, 0),
                              glm::vec3(45, -22.5, 0),
                              glm::vec3(45, -22.5, -160),
