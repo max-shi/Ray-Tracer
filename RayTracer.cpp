@@ -1,6 +1,11 @@
 /*==================================================================================
 * COSC 363  Computer Graphics
 * Ray Tracer for Cosc363 Assignment 2 (msh254)
+* Notes: read the ReadME (please!)
+* - By default antialiasing and stochastic sampling are DISABLED
+*   - To enable anti-aliasing or stochastic sampling, set the flags to true;
+* - NUMDIV (number of subdivisions) = 500
+* - MAX_STEPS (max recusion steps) = 10
 *===================================================================================
 */
 #include <iostream>
@@ -292,23 +297,22 @@ glm::vec3 calculatePixelColor(float xp, float yp, float cellX, float cellY, cons
     }
 }
 
+/** -------------------- Display Function --------------------------
+* Renders the ray-traced scene to the OpenGL window.
+*/
 void display() {
     float xp, yp;
     float cellX = (XMAX - XMIN) / NUMDIV;
     float cellY = (YMAX - YMIN) / NUMDIV;
     glm::vec3 eye(0., 0., 0.);
-
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
     glBegin(GL_QUADS);
-
     for (int i = 0; i < NUMDIV; i++) {
         xp = XMIN + i * cellX;
         for (int j = 0; j < NUMDIV; j++) {
             yp = YMIN + j * cellY;
-
             glm::vec3 col = calculatePixelColor(xp, yp, cellX, cellY, eye);
             glColor3f(col.r, col.g, col.b);
             glVertex2f(xp, yp);
@@ -317,11 +321,16 @@ void display() {
             glVertex2f(xp, yp + cellY);
         }
     }
-
     glEnd();
     glFlush();
 }
 
+/** -------------------- Keyboard Functions --------------------------
+ * Some basic keyboard functions for toggling and changing key parts of the ray tracer
+ * Note: this will take a LONG time to execute, as the whole process must be redone.
+ * It may be easier to manually switch features such as antialiasing or stochastic sampling manually
+ * By setting the boolean flags (in the global variables) directly.
+ */
 void keyboard(unsigned char key, int x, int y) {
     if (key == 'a' || key == 'A') {
         antiAliasingEnabled = !antiAliasingEnabled;
@@ -354,7 +363,6 @@ void keyboard(unsigned char key, int x, int y) {
         }
         glutPostRedisplay();
     }
-    // Depth of field and roughness controls removed as these features are disabled
     else if (key == 'n' || key == 'N') {
         // Increase/decrease number of samples
         if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) {
@@ -368,13 +376,35 @@ void keyboard(unsigned char key, int x, int y) {
     }
 }
 
+/** -------------------- Objects --------------------------
+ * This section defines all scene objects for the ray tracer.
+ * 
+ * Scene Structure:
+ * - Room: Constructed with 6 planes (floor, ceiling, and 4 walls)
+ *   - Floor: Checkered pattern (black and white)
+ *   - Walls: Different colored planes with various reflective properties
+ *   - Ceiling: Light gray plane
+ * 
+ * Object Types:
+ * - Spheres: Various spheres with different optical properties
+ *   - Reflective spheres: Reflect the environment with configurable intensity
+ *   - Transparent spheres: Allow light to pass through with refraction
+ *   - Refractive spheres: Bend light according to their refractive index
+ * 
+ * - Cylinders: Vertical cylinders with optional textures
+ *   - Some cylinders use solid colors
+ *   - Some cylinders use texture mapping (e.g., fabric pattern)
+ * 
+ * - Tori (Donuts): Rotated torus shapes with reflective properties
+ *   - Positioned symmetrically in the scene with different colors
+ *
+ */
 void initialize() {
     glMatrixMode(GL_PROJECTION);
     gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
     glClearColor(0, 0, 0, 1);
 
-    // Bounding Box
-
+// -------------------- Bounding Box --------------------------
     // Checkered Floor
     // This MUST be first, as we check for intersection with it first (and then set the checkered pattern).
     Plane *floor = new Plane(glm::vec3(-45, -22.5, 0),
@@ -401,6 +431,7 @@ void initialize() {
     rightWall->setSpecularity(false);
     sceneObjects.push_back(rightWall);
 
+// -------------------- Reflective Wall --------------------------
     Plane *backWall = new Plane(glm::vec3(-45, -22.5, -160),
                                glm::vec3(45, -22.5, -160),
                                glm::vec3(45, 45, -160),
@@ -426,42 +457,44 @@ void initialize() {
     ceiling->setSpecularity(false);
     sceneObjects.push_back(ceiling);
 
-    // Big Sphere on the Left
+    // -------------------- Purple Sphere (in the middle) --------------------------
     Sphere *sphereBig = new Sphere(glm::vec3(0,0,-140), 6.0);
     sphereBig->setColor(glm::vec3(1, 0.5, 1));
     sphereBig->setSpecularity(true);
     sphereBig->setReflectivity(true, 0.1);
     sceneObjects.push_back(sphereBig);
 
-
+    // -------------------- Textured Cylinder (below the purple sphere) --------------------------
     Cylinder* cylinder = new Cylinder(glm::vec3(0, -22.5, -140), 6.0, 17.0, glm::vec3(0.0, 0.8, 0.5), true);
     cylinder->setColor(glm::vec3(1,1,1));
     cylinder->setTexture(&cylinderTexture);
     sceneObjects.push_back(cylinder);
 
-    // Transparent Sphere
+    // -------------------- Transparent Sphere (on the left) --------------------------
     Sphere *sphere1 = new Sphere(glm::vec3(-18, -9, -75), 6.0);
     sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
     sphere1->setReflectivity(true, 0.1);
     sphere1->setTransparency(true, 0.7);
     sceneObjects.push_back(sphere1);
 
+    // -------------------- Green Cylinder (below the transparent sphere on the left) --------------------------
     Cylinder* cylinder3 = new Cylinder(glm::vec3(-18,-22.5,-75), 6.0, 8.0, glm::vec3(0.0, 0.8, 0.5), true );
     cylinder3->setColor(glm::vec3(0.6,1,0.6));
     sceneObjects.push_back(cylinder3);
 
-    // Refractive Sphere
+    // -------------------- Refractive Sphere (on the right) --------------------------
     Sphere *sphereRefract = new Sphere(glm::vec3(18, -9, -75), 6.0);
     sphereRefract->setColor(glm::vec3(0.2, 1, 0.2));
     sphereRefract->setRefractivity(true, 1, 1.02);
     sphereRefract->setReflectivity(true, 0.2);
     sceneObjects.push_back(sphereRefract);
 
+    // -------------------- Purple Cylinder (below the refractive sphere on the right) --------------------------
     Cylinder* cylinder2 = new Cylinder(glm::vec3(18,-22.5,-75), 6.0, 8.0, glm::vec3(0.0, 0.8, 0.5), true );
     cylinder2->setColor(glm::vec3(0.4,0,0.4));
     sceneObjects.push_back(cylinder2);
 
-    // Blue sphere (in the middle of the torus)
+    // -------------------- Blue Spheres (in the middle of the tori (tori = toruses.. i think) --------------------------
     Sphere *sphere3 = new Sphere(glm::vec3(25, 0, -100), 4.0);
     sphere3->setColor(glm::vec3(0, 1, 1));
     sphere3->setReflectivity(true, 0.8);
@@ -472,7 +505,8 @@ void initialize() {
     sphere4->setReflectivity(true, 0.8);
     sceneObjects.push_back(sphere4);
 
-    // Torus
+    // -------------------- Tori  --------------------------
+    // -------------------- Red torus on the right  --------------------------
     Torus* torus = new Torus(glm::vec3(25, 0, -100), 9.0f, 3.0f);
     torus->rotate(-55.0f, glm::vec3(0, 1, 0));
     torus->setColor(glm::vec3(0.8, 0.2, 0.2));
@@ -481,6 +515,7 @@ void initialize() {
     torus->setReflectivity(true, 0.3f);
     sceneObjects.push_back(torus);
 
+    // -------------------- Green torus on the left --------------------------
     Torus* torus2 = new Torus(glm::vec3(-25, 0, -100), 9.0f, 3.0f);
     torus2->rotate(55.0f, glm::vec3(0, 1, 0));
     torus2->setColor(glm::vec3(0.2, 0.8, 0.2));
@@ -489,12 +524,14 @@ void initialize() {
     torus2->setReflectivity(true, 0.3f);
     sceneObjects.push_back(torus2);
 
-    // Flat pink sphere
+    // -------------------- Flat Spheres --------------------------
+    // -------------------- Pink flat sphere on the right  --------------------------
     Sphere* flat = new Sphere(glm::vec3(25,-75,-100), 12.0f);
     flat->scale(glm::vec3(1.0f, 0.2f, 1.0f));
     flat->setColor(glm::vec3(0.8,0.2,0.6));
     sceneObjects.push_back(flat);
 
+    // -------------------- Green flat sphere on the left  --------------------------
     Sphere* flat2 = new Sphere(glm::vec3(-25,-75,-100), 12.0f);
     flat2->scale(glm::vec3(1.0f, 0.2f, 1.0f));
     flat2->setColor(glm::vec3(0.2,0.8,0.4));
@@ -503,6 +540,8 @@ void initialize() {
 int main(int argc, char *argv[]) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB );
+    // Window size is 1000x1000
+    // FIXME: is this too big?
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(20, 20);
 	glutCreateWindow("Raytracing");
