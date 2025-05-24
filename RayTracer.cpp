@@ -223,6 +223,7 @@ bool needsSubdivision(const glm::vec3& col1, const glm::vec3& col2) {
  * This function implements adaptive supersampling by recursively subdividing pixel regions
  * where color variation is high. It samples four sub-regions of the current region and
  * determines whether further subdivision is needed based on color differences.
+ * Note: this is never called directly by the ray tracer: see calculatePixelColor().
  */
 glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm::vec3& eye,
                          int maxDepth, int currentDepth, const glm::vec3& parentColor) {
@@ -277,8 +278,12 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
     }
 }
 
+/** -------------------- Calculate Pixel Color --------------------------
+* Calculates the color for a pixel based on ray tracing.
+* This function either performs a single ray trace for the pixel (when anti-aliasing is disabled)
+* or uses adaptive sampling for higher quality anti-aliasing when enabled.
+*/
 glm::vec3 calculatePixelColor(float xp, float yp, float cellX, float cellY, const glm::vec3& eye) {
-    // Depth of field disabled
     if (!antiAliasingEnabled) {
         glm::vec3 dir(xp + 0.5f * cellX, yp + 0.5f * cellY, -EDIST);
         Ray ray(eye, dir);
