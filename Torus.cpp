@@ -5,17 +5,6 @@
 
 using namespace std;
 
-
-/*Considerations to make still: TODO
- *  The Durand-Kerner method is relatively expensive compared to analytical solutions for simpler shapes.
- The number of iterations (currently 100) can be adjusted based on quality needs.
- *
- */
-#include "Torus.h"
-#include <cmath>
-#include <complex>
-#include <algorithm>
-
 Torus::Torus(glm::vec3 center, float majorRadius, float minorRadius)
     : center(center), majorRadius(majorRadius), minorRadius(minorRadius) {
     transform = glm::mat4(1.0f); // Identity matrix
