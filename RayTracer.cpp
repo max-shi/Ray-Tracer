@@ -92,9 +92,12 @@ glm::vec3 trace(Ray ray, int step) {
     float lightIntensity = 1.2f;
 
     //-------------------- Stochastic Sampling --------------------------
-    if (stochasticSamplingEnabled) {
+    if (stochasticSamplingEnabled) { // Check if stochastic sampling is enabled for soft shadows
         // see https://www.youtube.com/watch?v=NCptEJ1Uevg&ab_channel=OGLDEV
+        // https://cg.ivd.kit.edu/publications/2015/sssm/StochasticSoftShadows.pdf
         // Soft shadows with area light sampling
+
+        // Setup; normalise light direction and find u,v vectors
         glm::vec3 lightDir = glm::normalize(LightVec);
         glm::vec3 u = glm::normalize(glm::cross(lightDir, glm::vec3(0, 1, 0)));
         if (glm::length(u) < 0.1f) u = glm::normalize(glm::cross(lightDir, glm::vec3(1, 0, 0)));
@@ -103,22 +106,26 @@ glm::vec3 trace(Ray ray, int step) {
         // Calculate lighting with soft shadows
         glm::vec3 diffuseColor(0);
         glm::vec3 specularColor(0);
+        // Counter for samples that are in shadow
         int shadowCount = 0;
-        
+
+        // Loop through multiple samples for the area light
         for (int i = 0; i < SAMPLES_PER_PIXEL; i++) {
             // Generate random point on area light
             float rx = (dist(rng) * 2.0f - 1.0f) * LIGHT_RADIUS;
             float ry = (dist(rng) * 2.0f - 1.0f) * LIGHT_RADIUS;
+            // Calculate position on area light using the random offsets
             glm::vec3 randomLightPos = lightPos + rx * u + ry * v;
             
             // Calculate lighting from this sample point
             glm::vec3 sampleLightVec = randomLightPos - ray.hit;
             float sampleLightDist = glm::length(sampleLightVec);
-            glm::vec3 sampleLightDir = glm::normalize(sampleLightVec);
             
             // Check if this light sample is visible (shadow ray)
             Ray shadowRay(ray.hit, sampleLightVec);
+            // Find closest intersection with scene objects
             shadowRay.closestPt(sceneObjects);
+
             if (shadowRay.index > -1 && shadowRay.dist < sampleLightDist) {
                 shadowCount++;
                 continue;
@@ -130,16 +137,17 @@ glm::vec3 trace(Ray ray, int step) {
         }
         
         // Average the results
+        // Calculate percentage of samples not in shadow
         float shadowFactor = 1.0f - (float)shadowCount / (float)SAMPLES_PER_PIXEL;
         if (shadowFactor > 0) {
-            color = (diffuseColor / (float)SAMPLES_PER_PIXEL) * attenuation * lightIntensity * shadowFactor;
-        } else {
-            color = glm::vec3(0);
+            color = (diffuseColor / (float)SAMPLES_PER_PIXEL) * attenuation * lightIntensity * shadowFactor; // Average color with shadow factor
+        } else { // If all samples are in shadow
+            color = glm::vec3(0); // Set color to black (full shadow)
         }
     } else {
     //-------------------- Non Stochastic Sampling --------------------------
+        // Normal flow; shadow is black
         color = obj->lighting(lightPos, -ray.dir, ray.hit) * attenuation * lightIntensity;
-        
         Ray shadowRay(ray.hit, LightVec);
         shadowRay.closestPt(sceneObjects);
         if (shadowRay.index > -1 && shadowRay.dist < lightDist) {
