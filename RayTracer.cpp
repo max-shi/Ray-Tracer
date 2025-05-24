@@ -27,8 +27,8 @@ TextureBMP cylinderTexture("../fabric-pattern-polyhaven.bmp");
 // These below parameters affect the speed at which the ray tracer loads
 const int NUMDIV = 500;
 const int MAX_STEPS = 10;
-bool antiAliasingEnabled = true;
-bool stochasticSamplingEnabled = true;
+bool antiAliasingEnabled = false;
+bool stochasticSamplingEnabled = false;
 int SAMPLES_PER_PIXEL = 4;
 const float EDIST = 40;
 const float XMIN = -20.0;
@@ -85,12 +85,15 @@ glm::vec3 trace(Ray ray, int step) {
      * However this causes light dropoff very fast, which is why it is common to  use 1/d, but in context of a ray tracer
      *  " In the original OpenGL lighting model, the equation 1.0/(c1 + c2*d + c3*d^2) was used to give programmers control over attenuation. " (from source)
      * hence the attenuation.
+     * Note: the values for c2, c3 are small because of the scale of the room.. (the room is 160x160 units) : which was an oversight when creating the program.
      */
 
-    float attenuation = 1.0f / (1.0f + 0.0008f * lightDist + 0.0004f * lightDist * lightDist);
+    float attenuation = 1.0f / (1.0f + 0.002f * lightDist + 0.0004f * lightDist * lightDist);
     float lightIntensity = 1.2f;
+
     //-------------------- Stochastic Sampling --------------------------
     if (stochasticSamplingEnabled) {
+        // see https://www.youtube.com/watch?v=NCptEJ1Uevg&ab_channel=OGLDEV
         // Soft shadows with area light sampling
         glm::vec3 lightDir = glm::normalize(LightVec);
         glm::vec3 u = glm::normalize(glm::cross(lightDir, glm::vec3(0, 1, 0)));
