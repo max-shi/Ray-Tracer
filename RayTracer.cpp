@@ -28,9 +28,9 @@ TextureBMP texture;
 TextureBMP cylinderTexture("../fabric-pattern-polyhaven.bmp");
 
 // These below parameters affect the speed at which the ray tracer loads
-const int NUMDIV = 1000;
+const int NUMDIV = 500;
 const int MAX_STEPS = 10;
-bool antiAliasingEnabled = true;
+bool antiAliasingEnabled = false;
 bool stochasticSamplingEnabled = false;
 int SAMPLES_PER_PIXEL = 4;
 const float EDIST = 40;
@@ -38,11 +38,13 @@ const float XMIN = -20.0;
 const float XMAX = 20.0;
 const float YMIN = -20.0;
 const float YMAX = 20.0;
-const int MAX_ADAPTIVE_DEPTH = 2;
+const int MAX_ADAPTIVE_DEPTH = 1; // Change this to 2 for better anti-aliasing
 float COLOR_THRESHOLD = 0.1f;
 float LIGHT_RADIUS = 3.0f;  // Radius of the area light for soft shadows
 
 // Random number generator for stochastic sampling
+// https://www.geeksforgeeks.org/stdmt19937-class-in-cpp/
+// https://stackoverflow.com/questions/56242943/what-is-the-proper-way-of-seeding-stdmt19937-with-stdchronohigh-resolution
 std::mt19937 rng(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 vector<SceneObject*> sceneObjects;
@@ -130,8 +132,23 @@ glm::vec3 trace(Ray ray, int step) {
             shadowRay.closestPt(sceneObjects);
 
             if (shadowRay.index > -1 && shadowRay.dist < sampleLightDist) {
-                shadowCount++;
-                continue;
+                SceneObject* blockingObj = sceneObjects[shadowRay.index];
+                if (blockingObj->isTransparent() || blockingObj->isRefractive()) {
+                    float shadowContribution;
+                    if (blockingObj->isTransparent()) {
+                        shadowContribution = 1.0f - blockingObj->getTransparencyCoeff();
+                    } else {
+                        shadowContribution = 1.0f - blockingObj->getRefractionCoeff();
+                    }
+                    shadowCount += shadowContribution;
+                    glm::vec3 tintColor = blockingObj->getColor();
+                    glm::vec3 sampleColor = obj->lighting(randomLightPos, -ray.dir, ray.hit);
+                    diffuseColor += sampleColor * tintColor * (1.0f - shadowContribution);
+                    continue;
+                } else {
+                    shadowCount++;
+                    continue;
+                }
             }
             
             // Add contribution from this light sample
@@ -154,7 +171,19 @@ glm::vec3 trace(Ray ray, int step) {
         Ray shadowRay(ray.hit, LightVec);
         shadowRay.closestPt(sceneObjects);
         if (shadowRay.index > -1 && shadowRay.dist < lightDist) {
-            color = glm::vec3(0);
+            SceneObject* blockingObj = sceneObjects[shadowRay.index];
+            if (blockingObj->isTransparent() || blockingObj->isRefractive()) {
+                float shadowFactor;
+                if (blockingObj->isTransparent()) {
+                    shadowFactor = blockingObj->getTransparencyCoeff();
+                } else {
+                    shadowFactor = blockingObj->getRefractionCoeff();
+                }
+                glm::vec3 tintColor = blockingObj->getColor();
+                color *= shadowFactor * tintColor;
+            } else {
+                color = glm::vec3(0);
+            }
         }
     }
     //-------------------- Ambient light Calculations --------------------------
@@ -451,7 +480,7 @@ void initialize() {
 
     // -------------------- Transparent Sphere (on the left) --------------------------
     Sphere *sphere1 = new Sphere(glm::vec3(-18, -9, -75), 6.0);
-    sphere1->setColor(glm::vec3(0.7, 0.7, 1.0));
+    sphere1->setColor(glm::vec3(0.8, 0.8, 0.8));
     sphere1->setReflectivity(true, 0.1);
     sphere1->setTransparency(true, 0.7);
     sceneObjects.push_back(sphere1);
@@ -463,7 +492,7 @@ void initialize() {
 
     // -------------------- Refractive Sphere (on the right) --------------------------
     Sphere *sphereRefract = new Sphere(glm::vec3(18, -9, -75), 6.0);
-    sphereRefract->setColor(glm::vec3(0.2, 1, 0.2));
+    sphereRefract->setColor(glm::vec3(0.8, 0.8, 0.8));
     sphereRefract->setRefractivity(true, 1, 1.02);
     sphereRefract->setReflectivity(true, 0.2);
     sceneObjects.push_back(sphereRefract);
