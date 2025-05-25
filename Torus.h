@@ -11,8 +11,8 @@ private:
     float majorRadius;
     float minorRadius;
     glm::vec3 center;
-    glm::mat4 transform;    // Transformation matrix
-    glm::mat4 invTransform; // Inverse transformation matrix
+    glm::mat4 transform;
+    glm::mat4 invTransform;
     bool intersectBoundingSphere(glm::vec3 p0, glm::vec3 dir, float& t) const;
     std::vector<float> solveQuartic(const std::vector<double>& coeffs) const;
 

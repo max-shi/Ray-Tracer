@@ -3,7 +3,7 @@
 #include <cmath>
 
 float Sphere::intersect(glm::vec3 p0_world, glm::vec3 dir_world) {
-	// 1) Ray → object space
+	// Ray into object space
 	glm::vec4 p0o4 = invTransform_ * glm::vec4(p0_world, 1.0f);
 	glm::vec3  p0o  = glm::vec3(p0o4) / p0o4.w;
 
@@ -32,14 +32,14 @@ float Sphere::intersect(glm::vec3 p0_world, glm::vec3 dir_world) {
 }
 
 glm::vec3 Sphere::normal(glm::vec3 hit_world) {
-	// 1) Hit → object space
+	// Hit into object space
 	glm::vec4 hitO4 = invTransform_ * glm::vec4(hit_world, 1.0f);
 	glm::vec3 hitO  = glm::vec3(hitO4) / hitO4.w;
 
-	// 2) normal in object space
+	// normal in object space
 	glm::vec3 nO = glm::normalize(hitO - center_);
 
-	// 3) back to world via transpose(inverse)
+	// back to world via transpose(inverse)
 	glm::vec4 nW4 = normalTransform_ * glm::vec4(nO, 0.0f);
 	return glm::normalize(glm::vec3(nW4));
 }

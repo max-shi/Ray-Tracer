@@ -13,13 +13,13 @@ class Ray
 {
 
 public:
-	glm::vec3 p0 = glm::vec3(0);		//The source point of the ray
-	glm::vec3 dir = glm::vec3(0,0,-1);	//The UNIT direction of the ray
-	glm::vec3 hit = glm::vec3(0);		//The closest point of intersection on the ray
-	int index = -1;						//The index of the object that gives the closet point of intersection
-	float dist = 0;						//The distance from the p0 to hit along the ray.
+	glm::vec3 p0 = glm::vec3(0);
+	glm::vec3 dir = glm::vec3(0,0,-1);
+	glm::vec3 hit = glm::vec3(0);
+	int index = -1;
+	float dist = 0;
 
-	Ray() {}		//Default constructor
+	Ray() {}
 
 
 	Ray(glm::vec3 source, glm::vec3 direction)
@@ -27,7 +27,7 @@ public:
 		const float RSTEP = 0.005f;
 		p0 = source;
 		dir = glm::normalize(direction);
-		p0 = p0 + RSTEP * dir;   //Ray stepping
+		p0 = p0 + RSTEP * dir;
 	}
 
 	void closestPt(std::vector<SceneObject*>& sceneObjects);

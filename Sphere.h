@@ -11,9 +11,9 @@ protected:
 	glm::vec3 center_;
 	float     radius_;
 
-	glm::mat4 transform_       = glm::mat4(1.0f);  // object → world
-	glm::mat4 invTransform_    = glm::mat4(1.0f);  // world → object
-	glm::mat4 normalTransform_ = glm::mat4(1.0f);  // transpose(invTransform_)
+	glm::mat4 transform_       = glm::mat4(1.0f);
+	glm::mat4 invTransform_    = glm::mat4(1.0f);
+	glm::mat4 normalTransform_ = glm::mat4(1.0f);
 
 public:
 	Sphere(glm::vec3 center, float radius)

@@ -12,7 +12,7 @@ void Ray::closestPt(std::vector<SceneObject*> &sceneObjects)
 	for(int i = 0;  i < sceneObjects.size();  i++)
 	{
 		float t = sceneObjects[i]->intersect(p0, dir);
-		if(t > 0)        //Intersects the object
+		if(t > 0)
 		{
 			point = p0 + dir*t;
 			if(t < tmin)

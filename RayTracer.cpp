@@ -353,28 +353,6 @@ void keyboard(unsigned char key, int x, int y) {
         printf("Color threshold decreased to %.2f\n", COLOR_THRESHOLD);
         glutPostRedisplay();
     }
-    else if (key == 'l' || key == 'L') {
-        // Increase/decrease light radius for soft shadows
-        if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) {
-            LIGHT_RADIUS = std::max(0.5f, LIGHT_RADIUS - 0.5f);
-            printf("Light radius decreased to %.1f\n", LIGHT_RADIUS);
-        } else {
-            LIGHT_RADIUS += 0.5f;
-            printf("Light radius increased to %.1f\n", LIGHT_RADIUS);
-        }
-        glutPostRedisplay();
-    }
-    else if (key == 'n' || key == 'N') {
-        // Increase/decrease number of samples
-        if (glutGetModifiers() == GLUT_ACTIVE_SHIFT) {
-            SAMPLES_PER_PIXEL = std::max(4, SAMPLES_PER_PIXEL / 2);
-            printf("Samples per pixel decreased to %d\n", SAMPLES_PER_PIXEL);
-        } else {
-            SAMPLES_PER_PIXEL = std::min(64, SAMPLES_PER_PIXEL * 2);
-            printf("Samples per pixel increased to %d\n", SAMPLES_PER_PIXEL);
-        }
-        glutPostRedisplay();
-    }
 }
 
 /** -------------------- Objects --------------------------
