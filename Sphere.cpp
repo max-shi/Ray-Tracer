@@ -43,3 +43,25 @@ glm::vec3 Sphere::normal(glm::vec3 hit_world) {
 	glm::vec4 nW4 = normalTransform_ * glm::vec4(nO, 0.0f);
 	return glm::normalize(glm::vec3(nW4));
 }
+
+void Sphere::translate(const glm::vec3& t) {
+	transform_    = glm::translate(glm::mat4(1.0f), t) * transform_;
+	invTransform_ = glm::inverse(transform_);
+	normalTransform_ = glm::transpose(invTransform_);
+}
+
+void Sphere::rotate(float angleDeg, const glm::vec3& axis) {
+	glm::mat4 toOrigin   = glm::translate(glm::mat4(1.0f), -center_);
+	glm::mat4 rot        = glm::rotate(glm::mat4(1.0f), glm::radians(angleDeg), axis);
+	glm::mat4 fromOrigin = glm::translate(glm::mat4(1.0f), center_);
+	transform_ = fromOrigin * rot * toOrigin * transform_;
+	invTransform_ = glm::inverse(transform_);
+	normalTransform_ = glm::transpose(invTransform_);
+}
+
+void Sphere::scale(const glm::vec3& s) {
+	glm::mat4 S = glm::scale(glm::mat4(1.0f), s);
+	transform_ = S * transform_;
+	invTransform_ = glm::inverse(transform_);
+	normalTransform_ = glm::transpose(invTransform_);
+}

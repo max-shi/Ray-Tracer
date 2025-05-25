@@ -28,9 +28,9 @@ TextureBMP texture;
 TextureBMP cylinderTexture("../fabric-pattern-polyhaven.bmp");
 
 // These below parameters affect the speed at which the ray tracer loads
-const int NUMDIV = 500;
+const int NUMDIV = 1000;
 const int MAX_STEPS = 10;
-bool antiAliasingEnabled = false;
+bool antiAliasingEnabled = true;
 bool stochasticSamplingEnabled = false;
 int SAMPLES_PER_PIXEL = 4;
 const float EDIST = 40;
@@ -38,7 +38,7 @@ const float XMIN = -20.0;
 const float XMAX = 20.0;
 const float YMIN = -20.0;
 const float YMAX = 20.0;
-const int MAX_ADAPTIVE_DEPTH = 1;
+const int MAX_ADAPTIVE_DEPTH = 2;
 float COLOR_THRESHOLD = 0.1f;
 float LIGHT_RADIUS = 3.0f;  // Radius of the area light for soft shadows
 
@@ -227,6 +227,7 @@ bool needsSubdivision(const glm::vec3& col1, const glm::vec3& col2) {
  * where color variation is high. It samples four sub-regions of the current region and
  * determines whether further subdivision is needed based on color differences.
  * Note: this is never called directly by the ray tracer: see calculatePixelColor().
+ * https://en.wikipedia.org/wiki/Supersampling
  */
 glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm::vec3& eye,
                          int maxDepth, int currentDepth, const glm::vec3& parentColor) {

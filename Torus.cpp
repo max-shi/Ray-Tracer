@@ -155,7 +155,7 @@ vector<float> Torus::solveQuartic(const vector<double>& coeffs) const {
     const double tolerance = 1e-6;
 
     // Initial guesses - equally spaced around the unit circle
-    // TODO : are these ideal?
+    // " There is nothing special about choosing 0.4 + 0.9i except that it is neither a real number nor a root of unity. "
     complex<double> roots[4] = {
         complex<double>(0.4, 0.9),
         complex<double>(-0.9, 0.4),
@@ -170,6 +170,8 @@ vector<float> Torus::solveQuartic(const vector<double>& coeffs) const {
         bool converged = true;
 
         // If in here, any time the convergence is false, then we break (at the bottom).
+        // This calculation is expanded upon in the report.
+
         for (int i = 0; i < 4; ++i) {
             complex<double> numerator =
                 coeffs[0] * roots[i] * roots[i] * roots[i] * roots[i] +
