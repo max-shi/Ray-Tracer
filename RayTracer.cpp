@@ -266,6 +266,7 @@ glm::vec3 adaptiveSample(float x, float y, float width, float height, const glm:
     }
 
     // Sample four sub-regions
+    // TODO: maybe more/less sub-regions?
     glm::vec3 samples[4];
     samples[0] = adaptiveSample(x, y, width/2, height/2, eye, maxDepth, currentDepth+1, parentColor);
     samples[1] = adaptiveSample(x + width/2, y, width/2, height/2, eye, maxDepth, currentDepth+1, parentColor);
