@@ -1,7 +1,6 @@
 /*==================================================================================
 * COSC 363  Computer Graphics
 * Ray Tracer for Cosc363 Assignment 2 (msh254)
-* Notes: read the ReadME (please!)
 * - By default antialiasing and stochastic sampling are DISABLED
 *   - To enable anti-aliasing or stochastic sampling, set the flags to true;
 * - NUMDIV (number of subdivisions) = 500
