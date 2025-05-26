@@ -23,7 +23,7 @@ float Sphere::intersect(glm::vec3 p0_world, glm::vec3 dir_world) {
 	if (t2 < 0.0f) return -1.0f;
 	float t_obj = (t1 > 0.0f ? t1 : t2) / tScale;
 
-	// 3) Map hit back to world
+	// Map hit back to world
 	glm::vec3 hitO   = p0o + t_obj * dirO;
 	glm::vec4 hitW4 = transform_ * glm::vec4(hitO, 1.0f);
 	glm::vec3 hitW  = glm::vec3(hitW4) / hitW4.w;
