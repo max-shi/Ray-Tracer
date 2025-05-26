@@ -11,7 +11,7 @@ float Sphere::intersect(glm::vec3 p0_world, glm::vec3 dir_world) {
 	float   tScale = glm::length(glm::vec3(di4));
 	glm::vec3 dirO = glm::normalize(glm::vec3(di4));
 
-	// 2) Solve |p0o - center_|^2 = radius_^2
+	// Solve |p0o - center_|^2 = radius_^2
 	glm::vec3 L = p0o - center_;
 	float b = glm::dot(dirO, L);
 	float c = glm::dot(L, L) - radius_*radius_;

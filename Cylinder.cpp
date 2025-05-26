@@ -14,8 +14,7 @@
 * Implementing the intersection check equation for a cylinder with caps
 */
 float Cylinder::intersect(glm::vec3 pos, glm::vec3 dir) {
-    float t = -1.0;  // Default return value (no intersection)
-    
+    float t = -1.0;
     // Intersection with the cylindrical surface
     glm::vec3 d = pos - center;
     

@@ -25,7 +25,6 @@ public:
 	void rotate(float angleDeg, const glm::vec3& axis);
 	void scale(const glm::vec3& s);
 
-	// the two virtuals
 	float intersect(glm::vec3 p0, glm::vec3 dir) override;
 	glm::vec3 normal(glm::vec3 pos) override;
 	virtual ~Sphere() {}

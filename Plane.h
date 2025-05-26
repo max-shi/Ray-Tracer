@@ -15,11 +15,11 @@
 class Plane : public SceneObject
 {
 private:
-	glm::vec3 a_ = glm::vec3(0);   //The vertices of the quad
+	glm::vec3 a_ = glm::vec3(0);
 	glm::vec3 b_ = glm::vec3(0);
 	glm::vec3 c_ = glm::vec3(0);
 	glm::vec3 d_ = glm::vec3(0);
-	int nverts_ = 4;				//Number of vertices (3 or 4)
+	int nverts_ = 4;
 
 public:	
 	Plane() = default;
